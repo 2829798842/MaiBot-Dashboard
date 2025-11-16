@@ -5,7 +5,7 @@ import { SettingsPage } from './routes/settings'
 import { AuthPage } from './routes/auth'
 import { NotFoundPage } from './routes/404'
 import { BotConfigPage } from './routes/config/bot'
-import { LpmmConfigPage } from './routes/config/lpmm'
+import { ModelProviderConfigPage } from './routes/config/modelProvider'
 import { ModelConfigPage } from './routes/config/model'
 import { Layout } from './components/layout'
 import { checkAuth } from './hooks/use-auth'
@@ -59,10 +59,10 @@ const botConfigRoute = createRoute({
 })
 
 // 配置路由 - 麦麦模型提供商配置
-const lpmmConfigRoute = createRoute({
+const modelProviderConfigRoute = createRoute({
   getParentRoute: () => protectedRoute,
-  path: '/config/lpmm',
-  component: LpmmConfigPage,
+  path: '/config/modelProvider',
+  component: ModelProviderConfigPage,
 })
 
 // 配置路由 - 麦麦模型配置
@@ -92,7 +92,7 @@ const routeTree = rootRoute.addChildren([
   protectedRoute.addChildren([
     indexRoute,
     botConfigRoute,
-    lpmmConfigRoute,
+    modelProviderConfigRoute,
     modelConfigRoute,
     settingsRoute,
   ]),

@@ -44,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
       title: '麦麦配置编辑',
       items: [
         { icon: FileText, label: '麦麦主程序配置', path: '/config/bot' },
-        { icon: Server, label: '麦麦模型提供商配置', path: '/config/lpmm' },
+        { icon: Server, label: '麦麦模型提供商配置', path: '/config/modelProvider' },
         { icon: Boxes, label: '麦麦模型配置', path: '/config/model' },
       ],
     },

@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { validateToken } from '@/lib/token-validator'
 import {
@@ -29,66 +30,54 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 
-type TabValue = 'appearance' | 'about' | 'notifications' | 'security'
-
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabValue>('appearance')
-
-  const tabs = [
-    { value: 'appearance' as const, label: '外观', icon: Palette },
-    { value: 'notifications' as const, label: '通知', icon: Bell },
-    { value: 'security' as const, label: '安全', icon: Shield },
-    { value: 'about' as const, label: '关于', icon: Info },
-  ]
-
   return (
-    <div className="container mx-auto p-6 max-w-5xl">
+    <div className="container mx-auto p-6 max-w-5xl space-y-6">
       {/* 页面标题 */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <SettingsIcon className="h-8 w-8 text-primary" />
+      <div className="flex items-center justify-between">
+        <div>
           <h1 className="text-3xl font-bold">系统设置</h1>
-        </div>
-        <p className="text-muted-foreground">管理您的应用偏好设置</p>
-      </div>
-
-      {/* 标签页导航 */}
-      <div className="border-b mb-6">
-        <div className="flex gap-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.value
-
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={cn(
-                  'relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors rounded-t-lg',
-                  'hover:text-foreground',
-                  isActive
-                    ? 'bg-background text-foreground'
-                    : 'text-muted-foreground hover:bg-accent/50'
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-                {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-            )
-          })}
+          <p className="text-muted-foreground mt-2">管理您的应用偏好设置</p>
         </div>
       </div>
 
-      {/* 标签页内容 */}
-      <div className="min-h-[500px]">
-        {activeTab === 'appearance' && <AppearanceTab />}
-        {activeTab === 'notifications' && <NotificationsTab />}
-        {activeTab === 'security' && <SecurityTab />}
-        {activeTab === 'about' && <AboutTab />}
-      </div>
+      {/* 标签页 */}
+      <Tabs defaultValue="appearance" className="w-full">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsTrigger value="appearance" className="gap-2">
+            <Palette className="h-4 w-4" strokeWidth={2} fill="none" />
+            外观
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="h-4 w-4" strokeWidth={2} fill="none" />
+            通知
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <Shield className="h-4 w-4" strokeWidth={2} fill="none" />
+            安全
+          </TabsTrigger>
+          <TabsTrigger value="about" className="gap-2">
+            <Info className="h-4 w-4" strokeWidth={2} fill="none" />
+            关于
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="appearance" className="mt-6">
+          <AppearanceTab />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="mt-6">
+          <NotificationsTab />
+        </TabsContent>
+
+        <TabsContent value="security" className="mt-6">
+          <SecurityTab />
+        </TabsContent>
+
+        <TabsContent value="about" className="mt-6">
+          <AboutTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
