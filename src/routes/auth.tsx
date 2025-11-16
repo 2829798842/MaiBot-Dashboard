@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Key, Lock, AlertCircle, Moon, Sun } from 'lucide-react'
+import { Key, Lock, AlertCircle, Moon, Sun, HelpCircle, FileText, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { WavesBackground } from '@/components/waves-background'
 import { useAnimation } from '@/hooks/use-animation'
 import { useTheme } from '@/components/use-theme'
@@ -105,7 +113,7 @@ export function AuthPage() {
         <CardHeader className="space-y-4 text-center">
           {/* Logo/Icon */}
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Lock className="h-8 w-8 text-primary" />
+            <Lock className="h-8 w-8 text-primary" strokeWidth={2} fill="none" />
           </div>
 
           <div className="space-y-2">
@@ -124,7 +132,7 @@ export function AuthPage() {
                 Access Token
               </Label>
               <div className="relative">
-                <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} fill="none" />
                 <Input
                   id="token"
                   type="password"
@@ -134,6 +142,7 @@ export function AuthPage() {
                   className={cn('pl-10', error && 'border-red-500 focus-visible:ring-red-500')}
                   disabled={isValidating}
                   autoFocus
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -141,7 +150,7 @@ export function AuthPage() {
             {/* 错误提示 */}
             {error && (
               <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 flex-shrink-0" strokeWidth={2} fill="none" />
                 <span>{error}</span>
               </div>
             )}
@@ -159,9 +168,77 @@ export function AuthPage() {
             </Button>
 
             {/* 帮助文本 */}
-            <p className="text-center text-xs text-muted-foreground">
-              如果您还没有 Access Token，请联系管理员获取
-            </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="w-full text-center text-sm text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline flex items-center justify-center gap-1">
+                  <HelpCircle className="h-4 w-4" strokeWidth={2} fill="none" />
+                  我没有 Token，我该去哪里获得 Token？
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary" strokeWidth={2} fill="none" />
+                    如何获取 Access Token
+                  </DialogTitle>
+                  <DialogDescription>
+                    Access Token 是访问 MaiBot WebUI 的唯一凭证，请按以下方式获取
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  {/* 方式一：查看控制台 */}
+                  <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <Terminal className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={2} fill="none" />
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-semibold text-sm">方式一：查看启动日志</h4>
+                        <p className="text-sm text-muted-foreground">
+                          在 MaiBot 启动时，控制台会显示 WebUI Access Token。
+                        </p>
+                        <div className="rounded bg-background p-2 font-mono text-xs">
+                          <p className="text-muted-foreground">🔑 WebUI Access Token: abc123...</p>
+                          <p className="text-muted-foreground">💡 请使用此 Token 登录 WebUI</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 方式二：查看配置文件 */}
+                  <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={2} fill="none" />
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-semibold text-sm">方式二：查看配置文件</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Token 保存在项目根目录的配置文件中：
+                        </p>
+                        <div className="rounded bg-background p-2 font-mono text-xs break-all">
+                          <code className="text-primary">data/webui.json</code>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          打开此文件，复制 <code className="px-1 py-0.5 bg-background rounded">access_token</code> 字段的值
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 安全提示 */}
+                  <div className="rounded-lg border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/30 p-3">
+                    <div className="flex gap-2">
+                      <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" strokeWidth={2} fill="none" />
+                      <div className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
+                        <p className="font-semibold">安全提示</p>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs">
+                          <li>请妥善保管您的 Token，不要泄露给他人</li>
+                          <li>如需重置 Token，请在登录后前往系统设置</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </form>
         </CardContent>
       </Card>

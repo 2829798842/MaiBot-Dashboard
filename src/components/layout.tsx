@@ -1,14 +1,26 @@
-import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut } from 'lucide-react'
+import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { useTheme, toggleThemeWithTransition } from './use-theme'
 import { useAuthGuard } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { ReactNode } from 'react'
+import type { ReactNode, ComponentType } from 'react'
+import type { LucideProps } from 'lucide-react'
 
 interface LayoutProps {
   children: ReactNode
+}
+
+interface MenuItem {
+  icon: ComponentType<LucideProps>
+  label: string
+  path: string
+}
+
+interface MenuSection {
+  title: string
+  items: MenuItem[]
 }
 
 export function Layout({ children }: LayoutProps) {
@@ -20,10 +32,28 @@ export function Layout({ children }: LayoutProps) {
   const matchRoute = useMatchRoute()
   const navigate = useNavigate()
 
-  // 菜单项配置
-  const menuItems = [
-    { icon: Home, label: '首页', path: '/' },
-    { icon: Settings, label: '系统设置', path: '/settings' },
+  // 菜单项配置 - 分块结构
+  const menuSections: MenuSection[] = [
+    {
+      title: '概览',
+      items: [
+        { icon: Home, label: '首页', path: '/' },
+      ],
+    },
+    {
+      title: '麦麦配置编辑',
+      items: [
+        { icon: FileText, label: '麦麦主程序配置', path: '/config/bot' },
+        { icon: Server, label: '麦麦模型提供商配置', path: '/config/lpmm' },
+        { icon: Boxes, label: '麦麦模型配置', path: '/config/model' },
+      ],
+    },
+    {
+      title: '系统',
+      items: [
+        { icon: Settings, label: '系统设置', path: '/settings' },
+      ],
+    },
   ]
 
   // 获取实际应用的主题（处理 system 情况）
@@ -82,45 +112,68 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-4">
-          <ul className="space-y-2">
-            {menuItems.map((item) => {
-              const isActive = matchRoute({ to: item.path })
-              const Icon = item.icon
+          <ul className="space-y-6">
+            {menuSections.map((section, sectionIndex) => (
+              <li key={section.title}>
+                {/* 块标题 - 侧边栏展开时显示 */}
+                {sidebarOpen && (
+                  <div className="mb-2 px-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      {section.title}
+                    </h3>
+                  </div>
+                )}
 
-              return (
-                <li key={item.path} className="relative">
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      'relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      isActive
-                        ? 'bg-accent text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
-                      !sidebarOpen && 'justify-center px-0'
-                    )}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {/* 左侧高亮条 */}
-                    {isActive && (
-                      <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
-                    )}
-                    <Icon
-                      className={cn(
-                        'h-5 w-5 flex-shrink-0',
-                        !sidebarOpen && 'mx-auto',
-                        isActive && 'text-primary'
-                      )}
-                    />
-                    {sidebarOpen && (
-                      <span className={cn('text-sm font-medium', isActive && 'font-semibold')}>
-                        {item.label}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              )
-            })}
+                {/* 分割线 - 侧边栏折叠时显示 */}
+                {!sidebarOpen && sectionIndex > 0 && (
+                  <div className="mb-4 border-t border-border" />
+                )}
+
+                {/* 菜单项列表 */}
+                <ul className="space-y-1">
+                  {section.items.map((item) => {
+                    const isActive = matchRoute({ to: item.path })
+                    const Icon = item.icon
+
+                    return (
+                      <li key={item.path} className="relative">
+                        <Link
+                          to={item.path}
+                          className={cn(
+                            'relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors',
+                            'hover:bg-accent hover:text-accent-foreground',
+                            isActive
+                              ? 'bg-accent text-foreground'
+                              : 'text-muted-foreground hover:text-foreground',
+                            !sidebarOpen && 'justify-center px-0'
+                          )}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {/* 左侧高亮条 */}
+                          {isActive && (
+                            <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+                          )}
+                          <Icon
+                            className={cn(
+                              'h-5 w-5 flex-shrink-0',
+                              !sidebarOpen && 'mx-auto',
+                              isActive && 'text-primary'
+                            )}
+                            strokeWidth={2}
+                            fill="none"
+                          />
+                          {sidebarOpen && (
+                            <span className={cn('text-sm font-medium', isActive && 'font-semibold')}>
+                              {item.label}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </li>
+            ))}
           </ul>
         </nav>
       </aside>

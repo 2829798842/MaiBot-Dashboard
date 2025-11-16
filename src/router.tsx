@@ -4,6 +4,9 @@ import { IndexPage } from './routes/index'
 import { SettingsPage } from './routes/settings'
 import { AuthPage } from './routes/auth'
 import { NotFoundPage } from './routes/404'
+import { BotConfigPage } from './routes/config/bot'
+import { LpmmConfigPage } from './routes/config/lpmm'
+import { ModelConfigPage } from './routes/config/model'
 import { Layout } from './components/layout'
 import { checkAuth } from './hooks/use-auth'
 
@@ -48,6 +51,27 @@ const indexRoute = createRoute({
   component: IndexPage,
 })
 
+// 配置路由 - 麦麦主程序配置
+const botConfigRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/config/bot',
+  component: BotConfigPage,
+})
+
+// 配置路由 - 麦麦模型提供商配置
+const lpmmConfigRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/config/lpmm',
+  component: LpmmConfigPage,
+})
+
+// 配置路由 - 麦麦模型配置
+const modelConfigRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/config/model',
+  component: ModelConfigPage,
+})
+
 // 设置页路由
 const settingsRoute = createRoute({
   getParentRoute: () => protectedRoute,
@@ -65,7 +89,13 @@ const notFoundRoute = createRoute({
 // 路由树
 const routeTree = rootRoute.addChildren([
   authRoute,
-  protectedRoute.addChildren([indexRoute, settingsRoute]),
+  protectedRoute.addChildren([
+    indexRoute,
+    botConfigRoute,
+    lpmmConfigRoute,
+    modelConfigRoute,
+    settingsRoute,
+  ]),
   notFoundRoute,
 ])
 
