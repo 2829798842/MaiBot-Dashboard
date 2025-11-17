@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Key, Lock, AlertCircle, Moon, Sun, HelpCircle, FileText, Terminal } from 'lucide-react'
+import { Key, Lock, AlertCircle, Moon, Sun, HelpCircle, FileText, Terminal, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { WavesBackground } from '@/components/waves-background'
 import { useAnimation } from '@/hooks/use-animation'
 import { useTheme } from '@/components/use-theme'
@@ -25,7 +36,7 @@ export function AuthPage() {
   const [isValidating, setIsValidating] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { enableAnimations } = useAnimation()
+  const { enableWavesBackground, setEnableWavesBackground } = useAnimation()
   const { theme, setTheme } = useTheme()
 
   // 如果已经认证，直接跳转到首页
@@ -93,8 +104,8 @@ export function AuthPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
-      {/* 波浪背景 - 仅在启用动画时显示 */}
-      {enableAnimations && <WavesBackground />}
+      {/* 波浪背景 - 独立控制 */}
+      {enableWavesBackground && <WavesBackground />}
 
       {/* 认证卡片 - 磨砂玻璃效果 */}
       <Card className="relative z-10 w-full max-w-md shadow-2xl backdrop-blur-xl bg-card/80 border-border/50">
@@ -240,6 +251,40 @@ export function AuthPage() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* 性能优化选项 */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline flex items-center justify-center gap-1">
+                  <Zap className="h-4 w-4" strokeWidth={2} fill="none" />
+                  我觉得这个界面很卡怎么办？
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-primary" strokeWidth={2} fill="none" />
+                    关闭背景动画
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    背景动画可能会在低性能设备上造成卡顿。关闭动画可以显著提升界面流畅度。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    关闭动画后，背景将变为纯色，但不影响任何功能的使用。您可以随时在系统设置中重新开启动画。
+                  </p>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => setEnableWavesBackground(false)}
+                  >
+                    关闭动画
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </form>
         </CardContent>
       </Card>

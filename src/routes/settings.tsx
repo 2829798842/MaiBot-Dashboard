@@ -89,7 +89,7 @@ export function SettingsPage() {
 // 外观设置标签页
 function AppearanceTab() {
   const { theme, setTheme } = useTheme()
-  const { enableAnimations, setEnableAnimations } = useAnimation()
+  const { enableAnimations, setEnableAnimations, enableWavesBackground, setEnableWavesBackground } = useAnimation()
   const [accentColor, setAccentColor] = useState(() => {
     return localStorage.getItem('accent-color') || 'blue'
   })
@@ -190,21 +190,43 @@ function AppearanceTab() {
       {/* 动效设置 */}
       <div>
         <h3 className="text-lg font-semibold mb-4">动画效果</h3>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <Label htmlFor="animations" className="text-base font-medium cursor-pointer">
-                启用动画效果
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                关闭后将禁用所有过渡动画和特效,提升性能
-              </p>
+        <div className="space-y-3">
+          {/* 全局动画开关 */}
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="animations" className="text-base font-medium cursor-pointer">
+                  启用动画效果
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  关闭后将禁用所有过渡动画和特效，提升性能
+                </p>
+              </div>
+              <Switch
+                id="animations"
+                checked={enableAnimations}
+                onCheckedChange={setEnableAnimations}
+              />
             </div>
-            <Switch
-              id="animations"
-              checked={enableAnimations}
-              onCheckedChange={setEnableAnimations}
-            />
+          </div>
+
+          {/* 波浪背景开关 */}
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="waves-background" className="text-base font-medium cursor-pointer">
+                  登录页波浪背景
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  关闭后登录页将使用纯色背景，适合低性能设备
+                </p>
+              </div>
+              <Switch
+                id="waves-background"
+                checked={enableWavesBackground}
+                onCheckedChange={setEnableWavesBackground}
+              />
+            </div>
           </div>
         </div>
       </div>

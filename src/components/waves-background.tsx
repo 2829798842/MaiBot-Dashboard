@@ -357,7 +357,7 @@ export function WavesBackground() {
         <style>{`
           path {
             fill: none;
-            stroke: hsl(var(--primary) / 0.15);
+            stroke: hsl(var(--primary) / 0.20);
             stroke-width: 1px;
           }
         `}</style>
