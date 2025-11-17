@@ -26,6 +26,10 @@ class LogWebSocketManager {
   private connectionCallbacks: Set<ConnectionCallback> = new Set()
   
   private isConnected = false
+  
+  // 日志缓存 - 保存所有接收到的日志
+  private logCache: LogEntry[] = []
+  private readonly maxCacheSize = 1000 // 最多缓存 1000 条日志
 
   /**
    * 获取 WebSocket URL
@@ -47,18 +51,15 @@ class LogWebSocketManager {
    */
   connect() {
     if (this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING) {
-      console.log('WebSocket 已经连接或正在连接中')
       return
     }
 
     const wsUrl = this.getWebSocketUrl()
-    console.log('正在连接日志 WebSocket:', wsUrl)
 
     try {
       this.ws = new WebSocket(wsUrl)
 
       this.ws.onopen = () => {
-        console.log('✅ 日志 WebSocket 已连接')
         this.isConnected = true
         this.reconnectAttempts = 0
         this.notifyConnection(true)
@@ -86,7 +87,6 @@ class LogWebSocketManager {
       }
 
       this.ws.onclose = () => {
-        console.log('📡 WebSocket 已断开')
         this.isConnected = false
         this.notifyConnection(false)
         this.stopHeartbeat()
@@ -103,13 +103,11 @@ class LogWebSocketManager {
    */
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('❌ 已达到最大重连次数，请检查后端服务是否正常运行')
       return
     }
 
     this.reconnectAttempts += 1
     const delay = Math.min(1000 * this.reconnectAttempts, 10000)
-    console.log(`将在 ${delay / 1000} 秒后尝试第 ${this.reconnectAttempts} 次重连...`)
 
     this.reconnectTimeout = window.setTimeout(() => {
       this.connect()
@@ -179,13 +177,27 @@ class LogWebSocketManager {
    * 通知所有订阅者新日志
    */
   private notifyLog(log: LogEntry) {
-    this.logCallbacks.forEach(callback => {
-      try {
-        callback(log)
-      } catch (error) {
-        console.error('日志回调执行失败:', error)
+    // 检查是否已存在（通过 id 去重）
+    const exists = this.logCache.some(existingLog => existingLog.id === log.id)
+    
+    if (!exists) {
+      // 添加到缓存
+      this.logCache.push(log)
+      
+      // 限制缓存大小
+      if (this.logCache.length > this.maxCacheSize) {
+        this.logCache = this.logCache.slice(-this.maxCacheSize)
       }
-    })
+      
+      // 只有新日志才通知订阅者
+      this.logCallbacks.forEach(callback => {
+        try {
+          callback(log)
+        } catch (error) {
+          console.error('日志回调执行失败:', error)
+        }
+      })
+    }
   }
 
   /**
@@ -199,6 +211,20 @@ class LogWebSocketManager {
         console.error('连接状态回调执行失败:', error)
       }
     })
+  }
+
+  /**
+   * 获取缓存的所有日志
+   */
+  getAllLogs(): LogEntry[] {
+    return [...this.logCache]
+  }
+
+  /**
+   * 清空日志缓存
+   */
+  clearLogs() {
+    this.logCache = []
   }
 
   /**

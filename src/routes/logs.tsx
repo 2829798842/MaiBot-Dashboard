@@ -26,9 +26,14 @@ export function LogViewerPage() {
 
   // 订阅全局 WebSocket 连接
   useEffect(() => {
-    // 订阅日志消息
-    const unsubscribeLogs = logWebSocket.onLog((log) => {
-      setLogs(prev => [...prev, log])
+    // 初始化时加载缓存的日志
+    const cachedLogs = logWebSocket.getAllLogs()
+    setLogs(cachedLogs)
+    
+    // 订阅日志消息 - 直接使用全局缓存而不是组件状态
+    const unsubscribeLogs = logWebSocket.onLog(() => {
+      // 每次收到新日志，重新从全局缓存加载
+      setLogs(logWebSocket.getAllLogs())
     })
 
     // 订阅连接状态
@@ -94,6 +99,7 @@ export function LogViewerPage() {
 
   // 清空日志
   const handleClear = () => {
+    logWebSocket.clearLogs() // 清空全局缓存
     setLogs([])
   }
 
