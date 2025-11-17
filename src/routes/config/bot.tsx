@@ -5,7 +5,31 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Save, Plus, Trash2 } from 'lucide-react'
+import { Slider } from '@/components/ui/slider'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Save, Plus, Trash2, Eye, Clock } from 'lucide-react'
 import { getBotConfig, updateBotConfig, updateBotConfigSection } from '@/lib/config-api'
 import { useToast } from '@/hooks/use-toast'
 
@@ -40,6 +64,11 @@ interface ChatConfig {
     value: number
   }>
   include_planner_reasoning: boolean
+}
+
+interface ExpressionConfig {
+  learning_list: Array<[string, string, string, string]>
+  expression_groups: Array<string[]>
 }
 
 interface EmojiConfig {
@@ -97,6 +126,7 @@ export function BotConfigPage() {
   const [botConfig, setBotConfig] = useState<BotConfig | null>(null)
   const [personalityConfig, setPersonalityConfig] = useState<PersonalityConfig | null>(null)
   const [chatConfig, setChatConfig] = useState<ChatConfig | null>(null)
+  const [expressionConfig, setExpressionConfig] = useState<ExpressionConfig | null>(null)
   const [emojiConfig, setEmojiConfig] = useState<EmojiConfig | null>(null)
   const [memoryConfig, setMemoryConfig] = useState<MemoryConfig | null>(null)
   const [toolConfig, setToolConfig] = useState<ToolConfig | null>(null)
@@ -118,7 +148,15 @@ export function BotConfigPage() {
 
       setBotConfig(config.bot as BotConfig)
       setPersonalityConfig(config.personality as PersonalityConfig)
-      setChatConfig(config.chat as ChatConfig)
+      
+      // 确保 talk_value_rules 有默认值
+      const chatConfigData = config.chat as ChatConfig
+      if (!chatConfigData.talk_value_rules) {
+        chatConfigData.talk_value_rules = []
+      }
+      setChatConfig(chatConfigData)
+      
+      setExpressionConfig(config.expression as ExpressionConfig)
       setEmojiConfig(config.emoji as EmojiConfig)
       setMemoryConfig(config.memory as MemoryConfig)
       setToolConfig(config.tool as ToolConfig)
@@ -198,6 +236,12 @@ export function BotConfigPage() {
   }, [chatConfig, triggerAutoSave])
 
   useEffect(() => {
+    if (expressionConfig && !initialLoadRef.current) {
+      triggerAutoSave('expression', expressionConfig)
+    }
+  }, [expressionConfig, triggerAutoSave])
+
+  useEffect(() => {
     if (emojiConfig && !initialLoadRef.current) {
       triggerAutoSave('emoji', emojiConfig)
     }
@@ -247,6 +291,7 @@ export function BotConfigPage() {
         bot: botConfig,
         personality: personalityConfig,
         chat: chatConfig,
+        expression: expressionConfig,
         emoji: emojiConfig,
         memory: memoryConfig,
         tool: toolConfig,
@@ -303,10 +348,11 @@ export function BotConfigPage() {
 
       {/* 标签页 */}
       <Tabs defaultValue="bot" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-9">
+        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
           <TabsTrigger value="bot">基本信息</TabsTrigger>
           <TabsTrigger value="personality">人格</TabsTrigger>
           <TabsTrigger value="chat">聊天</TabsTrigger>
+          <TabsTrigger value="expression">表达</TabsTrigger>
           <TabsTrigger value="emoji">表情</TabsTrigger>
           <TabsTrigger value="memory">记忆</TabsTrigger>
           <TabsTrigger value="tool">工具</TabsTrigger>
@@ -330,6 +376,13 @@ export function BotConfigPage() {
         {/* 聊天配置 */}
         <TabsContent value="chat" className="space-y-4">
           {chatConfig && <ChatSection config={chatConfig} onChange={setChatConfig} />}
+        </TabsContent>
+
+        {/* 表达配置 */}
+        <TabsContent value="expression" className="space-y-4">
+          {expressionConfig && (
+            <ExpressionSection config={expressionConfig} onChange={setExpressionConfig} />
+          )}
         </TabsContent>
 
         {/* 表情配置 */}
@@ -460,13 +513,27 @@ function BotInfoSection({
                     onChange={(e) => updatePlatform(index, e.target.value)}
                     placeholder="wx:114514"
                   />
-                  <Button
-                    onClick={() => removePlatform(index)}
-                    size="icon"
-                    variant="outline"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="icon" variant="outline">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确认删除</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          确定要删除平台账号 "{platform || '(空)'}" 吗？此操作无法撤销。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removePlatform(index)}>
+                          删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               ))}
               {config.platforms.length === 0 && (
@@ -491,9 +558,27 @@ function BotInfoSection({
                     onChange={(e) => updateAlias(index, e.target.value)}
                     placeholder="小麦"
                   />
-                  <Button onClick={() => removeAlias(index)} size="icon" variant="outline">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="icon" variant="outline">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确认删除</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          确定要删除别名 "{alias || '(空)'}" 吗？此操作无法撤销。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeAlias(index)}>
+                          删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               ))}
               {config.alias_names.length === 0 && (
@@ -624,9 +709,27 @@ function PersonalitySection({
                     placeholder="描述一个人格状态"
                     rows={2}
                   />
-                  <Button onClick={() => removeState(index)} size="icon" variant="outline">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="icon" variant="outline">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确认删除</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          确定要删除这个人格状态吗？此操作无法撤销。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeState(index)}>
+                          删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               ))}
             </div>
@@ -655,7 +758,7 @@ function PersonalitySection({
   )
 }
 
-// 聊天配置组件（简化版，完整版需要更多代码）
+// 聊天配置组件
 function ChatSection({
   config,
   onChange,
@@ -663,13 +766,222 @@ function ChatSection({
   config: ChatConfig
   onChange: (config: ChatConfig) => void
 }) {
+  // 添加发言频率规则
+  const addTalkValueRule = () => {
+    onChange({
+      ...config,
+      talk_value_rules: [
+        ...config.talk_value_rules,
+        { target: '', time: '00:00-23:59', value: 1.0 },
+      ],
+    })
+  }
+
+  // 删除发言频率规则
+  const removeTalkValueRule = (index: number) => {
+    onChange({
+      ...config,
+      talk_value_rules: config.talk_value_rules.filter((_, i) => i !== index),
+    })
+  }
+
+  // 更新发言频率规则
+  const updateTalkValueRule = (
+    index: number,
+    field: 'target' | 'time' | 'value',
+    value: string | number
+  ) => {
+    const newRules = [...config.talk_value_rules]
+    newRules[index] = {
+      ...newRules[index],
+      [field]: value,
+    }
+    onChange({
+      ...config,
+      talk_value_rules: newRules,
+    })
+  }
+
+  // 时间选择组件
+  const TimeRangePicker = ({
+    value,
+    onChange,
+  }: {
+    value: string
+    onChange: (value: string) => void
+  }) => {
+    const [startHour, setStartHour] = useState('00')
+    const [startMinute, setStartMinute] = useState('00')
+    const [endHour, setEndHour] = useState('23')
+    const [endMinute, setEndMinute] = useState('59')
+
+    useEffect(() => {
+      const parts = value.split('-')
+      if (parts.length === 2) {
+        const [start, end] = parts
+        const [sh, sm] = start.split(':')
+        const [eh, em] = end.split(':')
+        if (sh) setStartHour(sh.padStart(2, '0'))
+        if (sm) setStartMinute(sm.padStart(2, '0'))
+        if (eh) setEndHour(eh.padStart(2, '0'))
+        if (em) setEndMinute(em.padStart(2, '0'))
+      }
+    }, [value])
+
+    const updateTime = (
+      newStartHour: string,
+      newStartMinute: string,
+      newEndHour: string,
+      newEndMinute: string
+    ) => {
+      const newValue = `${newStartHour}:${newStartMinute}-${newEndHour}:${newEndMinute}`
+      onChange(newValue)
+    }
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-start font-mono text-sm">
+            <Clock className="h-4 w-4 mr-2" />
+            {value || '选择时间段'}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium text-sm mb-3">开始时间</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">小时</Label>
+                  <Select
+                    value={startHour}
+                    onValueChange={(v) => {
+                      setStartHour(v)
+                      updateTime(v, startMinute, endHour, endMinute)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                        <SelectItem key={h} value={h.toString().padStart(2, '0')}>
+                          {h.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">分钟</Label>
+                  <Select
+                    value={startMinute}
+                    onValueChange={(v) => {
+                      setStartMinute(v)
+                      updateTime(startHour, v, endHour, endMinute)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                        <SelectItem key={m} value={m.toString().padStart(2, '0')}>
+                          {m.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium text-sm mb-3">结束时间</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">小时</Label>
+                  <Select
+                    value={endHour}
+                    onValueChange={(v) => {
+                      setEndHour(v)
+                      updateTime(startHour, startMinute, v, endMinute)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                        <SelectItem key={h} value={h.toString().padStart(2, '0')}>
+                          {h.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">分钟</Label>
+                  <Select
+                    value={endMinute}
+                    onValueChange={(v) => {
+                      setEndMinute(v)
+                      updateTime(startHour, startMinute, endHour, v)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                        <SelectItem key={m} value={m.toString().padStart(2, '0')}>
+                          {m.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
+  // 预览窗口组件
+  const RulePreview = ({ rule }: { rule: { target: string; time: string; value: number } }) => {
+    const previewText = `{ target = "${rule.target}", time = "${rule.time}", value = ${rule.value.toFixed(1)} }`
+    
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4 mr-1" />
+            预览
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">配置预览</h4>
+            <div className="rounded-md bg-muted p-3 font-mono text-xs break-all">
+              {previewText}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              这是保存到 bot_config.toml 文件中的格式
+            </p>
+          </div>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
   return (
     <div className="rounded-lg border bg-card p-6 space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4">聊天设置</h3>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="talk_value">聊天频率</Label>
+            <Label htmlFor="talk_value">聊天频率（基础值）</Label>
             <Input
               id="talk_value"
               type="number"
@@ -757,11 +1069,532 @@ function ChatSection({
           </div>
         </div>
       </div>
+
+      {/* 动态发言频率规则配置 */}
+      {config.enable_talk_value_rules && (
+        <div className="border-t pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h4 className="text-base font-semibold">动态发言频率规则</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                按时段或聊天流ID调整发言频率，优先匹配具体聊天，再匹配全局规则
+              </p>
+            </div>
+            <Button onClick={addTalkValueRule} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              添加规则
+            </Button>
+          </div>
+
+          {config.talk_value_rules && config.talk_value_rules.length > 0 ? (
+            <div className="space-y-4">
+              {config.talk_value_rules.map((rule, index) => (
+                <div key={index} className="rounded-lg border p-4 bg-muted/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      规则 #{index + 1}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <RulePreview rule={rule} />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>确认删除</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              确定要删除规则 #{index + 1} 吗？此操作无法撤销。
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>取消</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => removeTalkValueRule(index)}>
+                              删除
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* 目标聊天流 */}
+                    <div className="grid gap-2">
+                      <Label htmlFor={`rule-target-${index}`} className="text-xs font-medium">
+                        目标聊天流 (Target)
+                      </Label>
+                      <Input
+                        id={`rule-target-${index}`}
+                        placeholder='留空=全局，或填 "platform:id:type"'
+                        value={rule.target}
+                        onChange={(e) =>
+                          updateTalkValueRule(index, 'target', e.target.value)
+                        }
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        示例：qq:1919810:group 或 qq:114514:private
+                      </p>
+                    </div>
+
+                    {/* 时间段选择器 */}
+                    <div className="grid gap-2">
+                      <Label className="text-xs font-medium">时间段 (Time)</Label>
+                      <TimeRangePicker
+                        value={rule.time}
+                        onChange={(v) => updateTalkValueRule(index, 'time', v)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        支持跨夜区间，例如 23:00-02:00
+                      </p>
+                    </div>
+
+                    {/* 发言频率滑块 */}
+                    <div className="grid gap-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={`rule-value-${index}`} className="text-xs font-medium">
+                          发言频率值 (Value)
+                        </Label>
+                        <Input
+                          id={`rule-value-${index}`}
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="1"
+                          value={rule.value}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value)
+                            if (!isNaN(val)) {
+                              updateTalkValueRule(index, 'value', Math.max(0, Math.min(1, val)))
+                            }
+                          }}
+                          className="w-20 h-8 text-xs"
+                        />
+                      </div>
+                      <Slider
+                        value={[rule.value]}
+                        onValueChange={(values) =>
+                          updateTalkValueRule(index, 'value', values[0])
+                        }
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>0 (完全沉默)</span>
+                        <span>0.5</span>
+                        <span>1.0 (正常)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">暂无规则，点击"添加规则"按钮创建</p>
+            </div>
+          )}
+
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <h5 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+              📝 规则说明
+            </h5>
+            <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+              <li>• <strong>Target 为空</strong>：全局规则，对所有聊天生效</li>
+              <li>• <strong>Target 指定</strong>：仅对特定聊天流生效（格式：platform:id:type）</li>
+              <li>• <strong>优先级</strong>：先匹配具体聊天流规则，再匹配全局规则</li>
+              <li>• <strong>时间支持跨夜</strong>：例如 23:00-02:00 表示晚上11点到次日凌晨2点</li>
+              <li>• <strong>数值范围</strong>：建议 0-1，0 表示完全沉默，1 表示正常发言</li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-// 其他配置组件（简化版）
+// 表达配置组件
+function ExpressionSection({
+  config,
+  onChange,
+}: {
+  config: ExpressionConfig
+  onChange: (config: ExpressionConfig) => void
+}) {
+  // 添加学习规则
+  const addLearningRule = () => {
+    onChange({
+      ...config,
+      learning_list: [...config.learning_list, ['', 'enable', 'enable', '1.0']],
+    })
+  }
+
+  // 删除学习规则
+  const removeLearningRule = (index: number) => {
+    onChange({
+      ...config,
+      learning_list: config.learning_list.filter((_, i) => i !== index),
+    })
+  }
+
+  // 更新学习规则
+  const updateLearningRule = (
+    index: number,
+    field: 0 | 1 | 2 | 3,
+    value: string
+  ) => {
+    const newList = [...config.learning_list]
+    newList[index][field] = value
+    onChange({
+      ...config,
+      learning_list: newList,
+    })
+  }
+
+  // 预览组件
+  const LearningRulePreview = ({ rule }: { rule: [string, string, string, string] }) => {
+    const previewText = `["${rule[0]}", "${rule[1]}", "${rule[2]}", "${rule[3]}"]`
+    
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4 mr-1" />
+            预览
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">配置预览</h4>
+            <div className="rounded-md bg-muted p-3 font-mono text-xs break-all">
+              {previewText}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              这是保存到 bot_config.toml 文件中的格式
+            </p>
+          </div>
+        </PopoverContent>
+      </Popover>
+    )
+  }
+
+  // 添加表达组
+  const addExpressionGroup = () => {
+    onChange({
+      ...config,
+      expression_groups: [...config.expression_groups, []],
+    })
+  }
+
+  // 删除表达组
+  const removeExpressionGroup = (index: number) => {
+    onChange({
+      ...config,
+      expression_groups: config.expression_groups.filter((_, i) => i !== index),
+    })
+  }
+
+  // 添加组成员
+  const addGroupMember = (groupIndex: number) => {
+    const newGroups = [...config.expression_groups]
+    newGroups[groupIndex] = [...newGroups[groupIndex], '']
+    onChange({
+      ...config,
+      expression_groups: newGroups,
+    })
+  }
+
+  // 删除组成员
+  const removeGroupMember = (groupIndex: number, memberIndex: number) => {
+    const newGroups = [...config.expression_groups]
+    newGroups[groupIndex] = newGroups[groupIndex].filter((_, i) => i !== memberIndex)
+    onChange({
+      ...config,
+      expression_groups: newGroups,
+    })
+  }
+
+  // 更新组成员
+  const updateGroupMember = (groupIndex: number, memberIndex: number, value: string) => {
+    const newGroups = [...config.expression_groups]
+    newGroups[groupIndex][memberIndex] = value
+    onChange({
+      ...config,
+      expression_groups: newGroups,
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 表达学习配置 */}
+      <div className="rounded-lg border bg-card p-6 space-y-6">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold">表达学习配置</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                配置麦麦如何学习和使用表达方式
+              </p>
+            </div>
+            <Button onClick={addLearningRule} size="sm" variant="outline">
+              <Plus className="h-4 w-4 mr-1" />
+              添加规则
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {config.learning_list.map((rule, index) => (
+              <div key={index} className="rounded-lg border p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    规则 {index + 1} {rule[0] === '' && '（全局配置）'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <LearningRulePreview rule={rule} />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>确认删除</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            确定要删除学习规则 {index + 1} 吗？此操作无法撤销。
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>取消</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeLearningRule(index)}>
+                            删除
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* 聊天流 ID */}
+                  <div className="grid gap-2">
+                    <Label className="text-xs font-medium">聊天流 ID</Label>
+                    <Input
+                      value={rule[0]}
+                      onChange={(e) => updateLearningRule(index, 0, e.target.value)}
+                      placeholder="留空表示全局配置，例如：qq:1919810:group"
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      格式：platform:id:type（group/private）
+                    </p>
+                  </div>
+
+                  {/* 使用学到的表达 - 改为开关 */}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-xs font-medium">使用学到的表达</Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          允许麦麦使用从聊天中学到的表达方式
+                        </p>
+                      </div>
+                      <Switch
+                        checked={rule[1] === 'enable'}
+                        onCheckedChange={(checked) =>
+                          updateLearningRule(index, 1, checked ? 'enable' : 'disable')
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* 学习表达 - 改为开关 */}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-xs font-medium">学习表达</Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          允许麦麦从聊天中学习新的表达方式
+                        </p>
+                      </div>
+                      <Switch
+                        checked={rule[2] === 'enable'}
+                        onCheckedChange={(checked) =>
+                          updateLearningRule(index, 2, checked ? 'enable' : 'disable')
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* 学习强度 - 改为滑块+输入框 */}
+                  <div className="grid gap-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">学习强度</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="5"
+                        value={rule[3]}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value)
+                          if (!isNaN(val)) {
+                            updateLearningRule(index, 3, Math.max(0, Math.min(5, val)).toFixed(1))
+                          }
+                        }}
+                        className="w-20 h-8 text-xs"
+                      />
+                    </div>
+                    <Slider
+                      value={[parseFloat(rule[3]) || 1.0]}
+                      onValueChange={(values) =>
+                        updateLearningRule(index, 3, values[0].toFixed(1))
+                      }
+                      min={0}
+                      max={5}
+                      step={0.1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0 (不学习)</span>
+                      <span>2.5</span>
+                      <span>5.0 (快速学习)</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      影响学习频率，最短学习间隔 = 300/学习强度（秒）
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {config.learning_list.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                暂无学习规则，点击"添加规则"开始配置
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 表达共享组配置 */}
+      <div className="rounded-lg border bg-card p-6 space-y-6">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold">表达共享组配置</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                配置不同聊天流之间如何共享学到的表达方式
+              </p>
+            </div>
+            <Button onClick={addExpressionGroup} size="sm" variant="outline">
+              <Plus className="h-4 w-4 mr-1" />
+              添加共享组
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {config.expression_groups.map((group, groupIndex) => (
+              <div key={groupIndex} className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    共享组 {groupIndex + 1}
+                    {group.length === 1 && group[0] === '*' && '（全局共享）'}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => addGroupMember(groupIndex)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>确认删除</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            确定要删除共享组 {groupIndex + 1} 吗？此操作无法撤销。
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>取消</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeExpressionGroup(groupIndex)}>
+                            删除
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {group.map((member, memberIndex) => (
+                    <div key={memberIndex} className="flex gap-2">
+                      <Input
+                        value={member}
+                        onChange={(e) =>
+                          updateGroupMember(groupIndex, memberIndex, e.target.value)
+                        }
+                        placeholder='输入 "*" 表示全局共享，或 "qq:123456:group"'
+                      />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="outline">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>确认删除</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              确定要删除组成员 "{member || '(空)'}" 吗？此操作无法撤销。
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>取消</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => removeGroupMember(groupIndex, memberIndex)}
+                            >
+                              删除
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  提示：输入 "*" 启用全局共享；或输入具体 chat_id（如
+                  qq:114514:private）组成互通组
+                </p>
+              </div>
+            ))}
+
+            {config.expression_groups.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                暂无共享组，点击"添加共享组"开始配置
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 表情配置组件
 function EmojiSection({
   config,
   onChange,
