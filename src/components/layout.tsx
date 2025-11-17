@@ -243,7 +243,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex h-16 items-center justify-between border-b bg-card px-4">
+        <header className="flex h-16 items-center justify-between border-b bg-card/80 backdrop-blur-md px-4 sticky top-0 z-10">
           <div className="flex items-center gap-4">
             {/* 移动端菜单按钮 */}
             <button

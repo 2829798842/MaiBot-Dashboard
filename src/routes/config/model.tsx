@@ -386,41 +386,42 @@ export function ModelConfigPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">加载中...</p>
+      <ScrollArea className="h-full">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <div className="flex items-center justify-center h-64">
+            <p className="text-muted-foreground">加载中...</p>
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      {/* 页面标题 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">模型配置</h1>
-          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理模型和任务配置</p>
+    <ScrollArea className="h-full">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* 页面标题 */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">模型配置</h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理模型和任务配置</p>
+          </div>
+          <Button 
+            onClick={saveConfig} 
+            disabled={saving || autoSaving || !hasUnsavedChanges} 
+            size="sm"
+            className="w-full sm:w-auto"
+          >
+            <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
+            {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
+          </Button>
         </div>
-        <Button 
-          onClick={saveConfig} 
-          disabled={saving || autoSaving || !hasUnsavedChanges} 
-          size="sm"
-          className="w-full sm:w-auto"
-        >
-          <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
-          {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
-        </Button>
-      </div>
 
-      {/* 标签页 */}
-      <Tabs defaultValue="models" className="w-full">
-        <TabsList className="grid w-full max-w-full sm:max-w-md grid-cols-2">
-          <TabsTrigger value="models">模型配置</TabsTrigger>
-          <TabsTrigger value="tasks">模型任务配置</TabsTrigger>
-        </TabsList>
-
-        <ScrollArea className="h-[calc(100vh-320px)]">
+        {/* 标签页 */}
+        <Tabs defaultValue="models" className="w-full">
+          <TabsList className="grid w-full max-w-full sm:max-w-md grid-cols-2">
+            <TabsTrigger value="models">模型配置</TabsTrigger>
+            <TabsTrigger value="tasks">模型任务配置</TabsTrigger>
+          </TabsList>
           {/* 模型配置标签页 */}
           <TabsContent value="models" className="space-y-4 mt-0">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -736,7 +737,6 @@ export function ModelConfigPage() {
             </div>
           )}
         </TabsContent>
-        </ScrollArea>
       </Tabs>
 
       {/* 编辑模型对话框 */}
@@ -905,7 +905,8 @@ export function ModelConfigPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </ScrollArea>
   )
 }
 

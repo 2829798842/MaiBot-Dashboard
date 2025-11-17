@@ -12,28 +12,42 @@ import {
 import { Card } from '@/components/ui/card'
 import { Search, RefreshCw, Download, Filter, Trash2, Pause, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface LogEntry {
-  id: string
-  timestamp: string
-  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
-  module: string
-  message: string
-  details?: Record<string, unknown>
-}
+import { logWebSocket, type LogEntry } from '@/lib/log-websocket'
 
 export function LogViewerPage() {
-  const [logs] = useState<LogEntry[]>([])
+  const [logs, setLogs] = useState<LogEntry[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [levelFilter, setLevelFilter] = useState<string>('all')
   const [loading, setLoading] = useState(false)
   const [autoScroll, setAutoScroll] = useState(true)
+  const [connected, setConnected] = useState(false)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  // 订阅全局 WebSocket 连接
+  useEffect(() => {
+    // 订阅日志消息
+    const unsubscribeLogs = logWebSocket.onLog((log) => {
+      setLogs(prev => [...prev, log])
+    })
+
+    // 订阅连接状态
+    const unsubscribeConnection = logWebSocket.onConnectionChange((isConnected) => {
+      setConnected(isConnected)
+    })
+
+    // 清理订阅
+    return () => {
+      unsubscribeLogs()
+      unsubscribeConnection()
+    }
+  }, [])
 
   // 自动滚动到底部
   useEffect(() => {
-    if (autoScroll && viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
+    if (autoScroll && bottomRef.current) {
+      // 使用 scrollIntoView 确保滚动到底部
+      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
   }, [logs, autoScroll])
 
@@ -80,14 +94,19 @@ export function LogViewerPage() {
 
   // 清空日志
   const handleClear = () => {
-    // TODO: 实现清空逻辑
-    console.log('清空日志')
+    setLogs([])
   }
 
   // 导出日志
   const handleExport = () => {
-    // TODO: 实现导出逻辑
-    console.log('导出日志')
+    const dataStr = JSON.stringify(logs, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `logs-${new Date().toISOString()}.json`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   // 切换自动滚动
@@ -109,11 +128,25 @@ export function LogViewerPage() {
     <ScrollArea className="h-full">
       <div className="space-y-4 p-4 sm:p-6">
         {/* 标题 */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">日志查看器</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            实时查看和分析麦麦运行日志
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">日志查看器</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              实时查看和分析麦麦运行日志
+            </p>
+          </div>
+          {/* 连接状态指示器 */}
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                'h-3 w-3 rounded-full',
+                connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+              )}
+            />
+            <span className="text-sm text-muted-foreground">
+              {connected ? '已连接' : '未连接'}
+            </span>
+          </div>
         </div>
 
         {/* 控制栏 */}
@@ -235,8 +268,8 @@ export function LogViewerPage() {
                 ))
               )}
 
-              {/* 底部占位，确保能滚动到最底部 */}
-              <div className="h-4" />
+              {/* 底部锚点，用于自动滚动 */}
+              <div ref={bottomRef} className="h-4" />
             </div>
           </ScrollArea>
         </Card>

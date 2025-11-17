@@ -465,51 +465,52 @@ export function BotConfigPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">加载中...</p>
+      <ScrollArea className="h-full">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <div className="flex items-center justify-center h-64">
+            <p className="text-muted-foreground">加载中...</p>
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      {/* 页面标题 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">麦麦主程序配置</h1>
-          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理麦麦的核心功能和行为设置</p>
-        </div>
-        <Button
-          onClick={saveConfig}
-          disabled={saving || autoSaving || !hasUnsavedChanges}
-          size="sm"
-          className="w-full sm:w-auto"
-        >
-          <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
-          {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
-        </Button>
-      </div>
-
-      {/* 标签页 */}
-      <Tabs defaultValue="bot" className="w-full">
-        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-5 lg:grid-cols-10">
-            <TabsTrigger value="bot" className="flex-shrink-0">基本信息</TabsTrigger>
-            <TabsTrigger value="personality" className="flex-shrink-0">人格</TabsTrigger>
-            <TabsTrigger value="chat" className="flex-shrink-0">聊天</TabsTrigger>
-            <TabsTrigger value="expression" className="flex-shrink-0">表达</TabsTrigger>
-            <TabsTrigger value="features" className="flex-shrink-0">功能</TabsTrigger>
-            <TabsTrigger value="processing" className="flex-shrink-0">处理</TabsTrigger>
-            <TabsTrigger value="mood" className="flex-shrink-0">情绪</TabsTrigger>
-            <TabsTrigger value="voice" className="flex-shrink-0">语音</TabsTrigger>
-            <TabsTrigger value="lpmm" className="flex-shrink-0">知识库</TabsTrigger>
-            <TabsTrigger value="other" className="flex-shrink-0">其他</TabsTrigger>
-          </TabsList>
+    <ScrollArea className="h-full">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        {/* 页面标题 */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">麦麦主程序配置</h1>
+            <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理麦麦的核心功能和行为设置</p>
+          </div>
+          <Button
+            onClick={saveConfig}
+            disabled={saving || autoSaving || !hasUnsavedChanges}
+            size="sm"
+            className="w-full sm:w-auto"
+          >
+            <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
+            {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
+          </Button>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-320px)]">
+        {/* 标签页 */}
+        <Tabs defaultValue="bot" className="w-full">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-5 lg:grid-cols-10">
+              <TabsTrigger value="bot" className="flex-shrink-0">基本信息</TabsTrigger>
+              <TabsTrigger value="personality" className="flex-shrink-0">人格</TabsTrigger>
+              <TabsTrigger value="chat" className="flex-shrink-0">聊天</TabsTrigger>
+              <TabsTrigger value="expression" className="flex-shrink-0">表达</TabsTrigger>
+              <TabsTrigger value="features" className="flex-shrink-0">功能</TabsTrigger>
+              <TabsTrigger value="processing" className="flex-shrink-0">处理</TabsTrigger>
+              <TabsTrigger value="mood" className="flex-shrink-0">情绪</TabsTrigger>
+              <TabsTrigger value="voice" className="flex-shrink-0">语音</TabsTrigger>
+              <TabsTrigger value="lpmm" className="flex-shrink-0">知识库</TabsTrigger>
+              <TabsTrigger value="other" className="flex-shrink-0">其他</TabsTrigger>
+            </TabsList>
+          </div>
           {/* 基本信息 */}
           <TabsContent value="bot" className="space-y-4">
             {botConfig && <BotInfoSection config={botConfig} onChange={setBotConfig} />}
@@ -586,9 +587,9 @@ export function BotConfigPage() {
           {maimMessageConfig && <MaimMessageSection config={maimMessageConfig} onChange={setMaimMessageConfig} />}
           {telemetryConfig && <TelemetrySection config={telemetryConfig} onChange={setTelemetryConfig} />}
         </TabsContent>
-        </ScrollArea>
       </Tabs>
-    </div>
+      </div>
+    </ScrollArea>
   )
 }
 
