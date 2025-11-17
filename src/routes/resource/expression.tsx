@@ -1,16 +1,702 @@
+import { MessageSquare, Search, Edit, Trash2, Eye, Plus, Clock, Hash } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { useToast } from '@/hooks/use-toast'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Textarea } from '@/components/ui/textarea'
+import type { Expression, ExpressionCreateRequest, ExpressionUpdateRequest } from '@/types/expression'
+import { getExpressionList, getExpressionDetail, createExpression, updateExpression, deleteExpression, getExpressionStats } from '@/lib/expression-api'
+
 export function ExpressionManagementPage() {
+  const [expressions, setExpressions] = useState<Expression[]>([])
+  const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(20)
+  const [search, setSearch] = useState('')
+  const [selectedExpression, setSelectedExpression] = useState<Expression | null>(null)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [deleteConfirmExpression, setDeleteConfirmExpression] = useState<Expression | null>(null)
+  const [stats, setStats] = useState({ total: 0, recent_7days: 0, chat_count: 0, top_chats: {} as Record<string, number> })
+  const { toast } = useToast()
+
+  // 加载表达方式列表
+  const loadExpressions = async () => {
+    try {
+      setLoading(true)
+      const response = await getExpressionList({
+        page,
+        page_size: pageSize,
+        search: search || undefined,
+      })
+      setExpressions(response.data)
+      setTotal(response.total)
+    } catch (error) {
+      toast({
+        title: '加载失败',
+        description: error instanceof Error ? error.message : '无法加载表达方式',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 加载统计数据
+  const loadStats = async () => {
+    try {
+      const response = await getExpressionStats()
+      setStats(response.data)
+    } catch (error) {
+      console.error('加载统计数据失败:', error)
+    }
+  }
+
+  // 初始加载
+  useEffect(() => {
+    loadExpressions()
+    loadStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, search])
+
+  // 查看详情
+  const handleViewDetail = async (expression: Expression) => {
+    try {
+      const response = await getExpressionDetail(expression.id)
+      setSelectedExpression(response.data)
+      setIsDetailDialogOpen(true)
+    } catch (error) {
+      toast({
+        title: '加载详情失败',
+        description: error instanceof Error ? error.message : '无法加载表达方式详情',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // 编辑表达方式
+  const handleEdit = (expression: Expression) => {
+    setSelectedExpression(expression)
+    setIsEditDialogOpen(true)
+  }
+
+  // 删除表达方式
+  const handleDelete = async (expression: Expression) => {
+    try {
+      await deleteExpression(expression.id)
+      toast({
+        title: '删除成功',
+        description: `已删除表达方式: ${expression.situation}`,
+      })
+      setDeleteConfirmExpression(null)
+      loadExpressions()
+      loadStats()
+    } catch (error) {
+      toast({
+        title: '删除失败',
+        description: error instanceof Error ? error.message : '无法删除表达方式',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // 格式化时间
+  const formatTime = (timestamp: number | null) => {
+    if (!timestamp) return '-'
+    return new Date(timestamp * 1000).toLocaleString('zh-CN')
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">表达方式管理</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          管理麦麦的表达方式和话术模板
-        </p>
+      {/* 页面标题 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+            <MessageSquare className="h-8 w-8" strokeWidth={2} />
+            表达方式管理
+          </h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">
+            管理麦麦的表达方式和话术模板
+          </p>
+        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          新增表达方式
+        </Button>
       </div>
 
-      <div className="rounded-lg border bg-card p-6 sm:p-8">
-        <p className="text-muted-foreground text-center">表达方式管理功能开发中...</p>
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">总数量</div>
+          <div className="text-2xl font-bold mt-1">{stats.total}</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">近7天新增</div>
+          <div className="text-2xl font-bold mt-1 text-green-600">{stats.recent_7days}</div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="text-sm text-muted-foreground">关联聊天数</div>
+          <div className="text-2xl font-bold mt-1 text-blue-600">{stats.chat_count}</div>
+        </div>
+      </div>
+
+      {/* 搜索 */}
+      <div className="rounded-lg border bg-card p-4">
+        <Label htmlFor="search">搜索</Label>
+        <div className="relative mt-1.5">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="search"
+            placeholder="搜索情境、风格或上下文..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* 表达方式列表 */}
+      <div className="rounded-lg border bg-card">
+        <ScrollArea className="h-[calc(100vh-500px)]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>情境</TableHead>
+                <TableHead>风格</TableHead>
+                <TableHead>聊天ID</TableHead>
+                <TableHead>最后活跃</TableHead>
+                <TableHead className="text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    加载中...
+                  </TableCell>
+                </TableRow>
+              ) : expressions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              ) : (
+                expressions.map((expression) => (
+                  <TableRow key={expression.id}>
+                    <TableCell className="font-medium max-w-xs truncate">
+                      {expression.situation}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{expression.style}</TableCell>
+                    <TableCell className="font-mono text-sm">{expression.chat_id}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatTime(expression.last_active_time)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetail(expression)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(expression)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteConfirmExpression(expression)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+
+        {/* 分页 */}
+        {total > pageSize && (
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <div className="text-sm text-muted-foreground">
+              共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+              >
+                上一页
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(page + 1)}
+                disabled={page >= Math.ceil(total / pageSize)}
+              >
+                下一页
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 详情对话框 */}
+      <ExpressionDetailDialog
+        expression={selectedExpression}
+        open={isDetailDialogOpen}
+        onOpenChange={setIsDetailDialogOpen}
+      />
+
+      {/* 创建对话框 */}
+      <ExpressionCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={() => {
+          loadExpressions()
+          loadStats()
+          setIsCreateDialogOpen(false)
+        }}
+      />
+
+      {/* 编辑对话框 */}
+      <ExpressionEditDialog
+        expression={selectedExpression}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={() => {
+          loadExpressions()
+          loadStats()
+          setIsEditDialogOpen(false)
+        }}
+      />
+
+      {/* 删除确认对话框 */}
+      <AlertDialog
+        open={!!deleteConfirmExpression}
+        onOpenChange={() => setDeleteConfirmExpression(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除表达方式 "{deleteConfirmExpression?.situation}" 吗？
+              此操作不可撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmExpression && handleDelete(deleteConfirmExpression)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+
+// 表达方式详情对话框
+function ExpressionDetailDialog({
+  expression,
+  open,
+  onOpenChange,
+}: {
+  expression: Expression | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  if (!expression) return null
+
+  const formatTime = (timestamp: number | null) => {
+    if (!timestamp) return '-'
+    return new Date(timestamp * 1000).toLocaleString('zh-CN')
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>表达方式详情</DialogTitle>
+          <DialogDescription>
+            查看表达方式的完整信息
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InfoItem label="情境" value={expression.situation} />
+            <InfoItem label="风格" value={expression.style} />
+            <InfoItem icon={Hash} label="聊天ID" value={expression.chat_id} mono />
+            <InfoItem icon={Hash} label="记录ID" value={expression.id.toString()} mono />
+          </div>
+
+          {expression.context && (
+            <div className="rounded-lg border bg-muted/50 p-3">
+              <Label className="text-xs text-muted-foreground">上下文</Label>
+              <p className="mt-1 text-sm whitespace-pre-wrap">{expression.context}</p>
+            </div>
+          )}
+
+          {expression.up_content && (
+            <div className="rounded-lg border bg-muted/50 p-3">
+              <Label className="text-xs text-muted-foreground">上文内容</Label>
+              <p className="mt-1 text-sm whitespace-pre-wrap">{expression.up_content}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <InfoItem icon={Clock} label="最后活跃" value={formatTime(expression.last_active_time)} />
+            <InfoItem icon={Clock} label="创建时间" value={formatTime(expression.create_date)} />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>关闭</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// 信息项组件
+function InfoItem({
+  icon: Icon,
+  label,
+  value,
+  mono = false,
+}: {
+  icon?: typeof Hash
+  label: string
+  value: string | null | undefined
+  mono?: boolean
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground flex items-center gap-1">
+        {Icon && <Icon className="h-3 w-3" />}
+        {label}
+      </Label>
+      <div className={cn('text-sm', mono && 'font-mono', !value && 'text-muted-foreground')}>
+        {value || '-'}
       </div>
     </div>
+  )
+}
+
+// 表达方式创建对话框
+function ExpressionCreateDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess: () => void
+}) {
+  const [formData, setFormData] = useState<ExpressionCreateRequest>({
+    situation: '',
+    style: '',
+    context: '',
+    up_content: '',
+    chat_id: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const { toast } = useToast()
+
+  const handleCreate = async () => {
+    if (!formData.situation || !formData.style || !formData.chat_id) {
+      toast({
+        title: '验证失败',
+        description: '请填写必填字段：情境、风格和聊天ID',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      setSaving(true)
+      await createExpression(formData)
+      toast({
+        title: '创建成功',
+        description: '表达方式已创建',
+      })
+      // 重置表单
+      setFormData({
+        situation: '',
+        style: '',
+        context: '',
+        up_content: '',
+        chat_id: '',
+      })
+      onSuccess()
+    } catch (error) {
+      toast({
+        title: '创建失败',
+        description: error instanceof Error ? error.message : '无法创建表达方式',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>新增表达方式</DialogTitle>
+          <DialogDescription>
+            创建新的表达方式记录
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="situation">
+                情境 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="situation"
+                value={formData.situation}
+                onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
+                placeholder="描述使用场景"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="style">
+                风格 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="style"
+                value={formData.style}
+                onChange={(e) => setFormData({ ...formData, style: e.target.value })}
+                placeholder="描述表达风格"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="chat_id">
+              聊天ID <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="chat_id"
+              value={formData.chat_id}
+              onChange={(e) => setFormData({ ...formData, chat_id: e.target.value })}
+              placeholder="关联的聊天ID"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="context">上下文</Label>
+            <Textarea
+              id="context"
+              value={formData.context}
+              onChange={(e) => setFormData({ ...formData, context: e.target.value })}
+              placeholder="上下文信息（可选）"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="up_content">上文内容</Label>
+            <Textarea
+              id="up_content"
+              value={formData.up_content}
+              onChange={(e) => setFormData({ ...formData, up_content: e.target.value })}
+              placeholder="上文内容（可选）"
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button onClick={handleCreate} disabled={saving}>
+            {saving ? '创建中...' : '创建'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// 表达方式编辑对话框
+function ExpressionEditDialog({
+  expression,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  expression: Expression | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess: () => void
+}) {
+  const [formData, setFormData] = useState<ExpressionUpdateRequest>({})
+  const [saving, setSaving] = useState(false)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (expression) {
+      setFormData({
+        situation: expression.situation,
+        style: expression.style,
+        context: expression.context || '',
+        up_content: expression.up_content || '',
+        chat_id: expression.chat_id,
+      })
+    }
+  }, [expression])
+
+  const handleSave = async () => {
+    if (!expression) return
+
+    try {
+      setSaving(true)
+      await updateExpression(expression.id, formData)
+      toast({
+        title: '保存成功',
+        description: '表达方式已更新',
+      })
+      onSuccess()
+    } catch (error) {
+      toast({
+        title: '保存失败',
+        description: error instanceof Error ? error.message : '无法更新表达方式',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!expression) return null
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>编辑表达方式</DialogTitle>
+          <DialogDescription>
+            修改表达方式的信息
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit_situation">情境</Label>
+              <Input
+                id="edit_situation"
+                value={formData.situation || ''}
+                onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
+                placeholder="描述使用场景"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit_style">风格</Label>
+              <Input
+                id="edit_style"
+                value={formData.style || ''}
+                onChange={(e) => setFormData({ ...formData, style: e.target.value })}
+                placeholder="描述表达风格"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit_chat_id">聊天ID</Label>
+            <Input
+              id="edit_chat_id"
+              value={formData.chat_id || ''}
+              onChange={(e) => setFormData({ ...formData, chat_id: e.target.value })}
+              placeholder="关联的聊天ID"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit_context">上下文</Label>
+            <Textarea
+              id="edit_context"
+              value={formData.context || ''}
+              onChange={(e) => setFormData({ ...formData, context: e.target.value })}
+              placeholder="上下文信息"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit_up_content">上文内容</Label>
+            <Textarea
+              id="edit_up_content"
+              value={formData.up_content || ''}
+              onChange={(e) => setFormData({ ...formData, up_content: e.target.value })}
+              placeholder="上文内容"
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? '保存中...' : '保存'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

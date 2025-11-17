@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, Pencil, Trash2, Save, Eye, EyeOff, Copy, Search } from 'lucide-react'
 import { getModelConfig, updateModelConfig, updateModelConfigSection } from '@/lib/config-api'
 import { useToast } from '@/hooks/use-toast'
@@ -63,6 +64,8 @@ export function ModelProviderConfigPage() {
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
   const [showApiKey, setShowApiKey] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedProviders, setSelectedProviders] = useState<Set<number>>(new Set())
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
   
   // 用于防抖的定时器
@@ -234,6 +237,54 @@ export function ModelProviderConfigPage() {
     setDeletingIndex(null)
   }
 
+  // 切换单个提供商选择
+  const toggleProviderSelection = (index: number) => {
+    const newSelected = new Set(selectedProviders)
+    if (newSelected.has(index)) {
+      newSelected.delete(index)
+    } else {
+      newSelected.add(index)
+    }
+    setSelectedProviders(newSelected)
+  }
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    if (selectedProviders.size === filteredProviders.length) {
+      setSelectedProviders(new Set())
+    } else {
+      const allIndices = filteredProviders.map((_, idx) => 
+        providers.findIndex(p => p === filteredProviders[idx])
+      )
+      setSelectedProviders(new Set(allIndices))
+    }
+  }
+
+  // 打开批量删除确认对话框
+  const openBatchDeleteDialog = () => {
+    if (selectedProviders.size === 0) {
+      toast({
+        title: '提示',
+        description: '请先选择要删除的提供商',
+        variant: 'default',
+      })
+      return
+    }
+    setBatchDeleteDialogOpen(true)
+  }
+
+  // 确认批量删除
+  const handleConfirmBatchDelete = () => {
+    const newProviders = providers.filter((_, index) => !selectedProviders.has(index))
+    setProviders(newProviders)
+    setSelectedProviders(new Set())
+    setBatchDeleteDialogOpen(false)
+    toast({
+      title: '批量删除成功',
+      description: `已删除 ${selectedProviders.size} 个提供商`,
+    })
+  }
+
   // 过滤提供商列表
   const filteredProviders = providers.filter((provider) => {
     if (!searchQuery) return true
@@ -264,6 +315,17 @@ export function ModelProviderConfigPage() {
           <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理 API 提供商配置</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
+          {selectedProviders.size > 0 && (
+            <Button 
+              onClick={openBatchDeleteDialog} 
+              size="sm" 
+              variant="destructive" 
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
+              批量删除 ({selectedProviders.size})
+            </Button>
+          )}
           <Button onClick={() => openEditDialog(null, null)} size="sm" className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
             添加提供商
@@ -359,6 +421,12 @@ export function ModelProviderConfigPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedProviders.size === filteredProviders.length && filteredProviders.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>名称</TableHead>
                 <TableHead>基础URL</TableHead>
                 <TableHead>客户端类型</TableHead>
@@ -371,41 +439,50 @@ export function ModelProviderConfigPage() {
             <TableBody>
               {filteredProviders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     {searchQuery ? '未找到匹配的提供商' : '暂无提供商配置，点击"添加提供商"开始配置'}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredProviders.map((provider, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{provider.name}</TableCell>
-                    <TableCell className="max-w-xs truncate" title={provider.base_url}>
-                      {provider.base_url}
-                    </TableCell>
-                    <TableCell>{provider.client_type}</TableCell>
-                    <TableCell className="text-right">{provider.max_retry}</TableCell>
-                    <TableCell className="text-right">{provider.timeout}</TableCell>
-                    <TableCell className="text-right">{provider.retry_interval}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(provider, index)}
-                        >
-                          <Pencil className="h-4 w-4" strokeWidth={2} fill="none" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openDeleteDialog(index)}
-                        >
-                          <Trash2 className="h-4 w-4" strokeWidth={2} fill="none" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredProviders.map((provider, displayIndex) => {
+                  const actualIndex = providers.findIndex(p => p === provider)
+                  return (
+                    <TableRow key={displayIndex}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedProviders.has(actualIndex)}
+                          onCheckedChange={() => toggleProviderSelection(actualIndex)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{provider.name}</TableCell>
+                      <TableCell className="max-w-xs truncate" title={provider.base_url}>
+                        {provider.base_url}
+                      </TableCell>
+                      <TableCell>{provider.client_type}</TableCell>
+                      <TableCell className="text-right">{provider.max_retry}</TableCell>
+                      <TableCell className="text-right">{provider.timeout}</TableCell>
+                      <TableCell className="text-right">{provider.retry_interval}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(provider, actualIndex)}
+                          >
+                            <Pencil className="h-4 w-4" strokeWidth={2} fill="none" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteDialog(actualIndex)}
+                          >
+                            <Trash2 className="h-4 w-4" strokeWidth={2} fill="none" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
               )}
             </TableBody>
           </Table>
@@ -585,6 +662,25 @@ export function ModelProviderConfigPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>删除</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 批量删除确认对话框 */}
+      <AlertDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除选中的 {selectedProviders.size} 个提供商吗？
+              此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBatchDelete} className="bg-destructive hover:bg-destructive/90">
+              批量删除
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

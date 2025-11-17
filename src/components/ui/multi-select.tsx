@@ -67,36 +67,29 @@ export function MultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-between', className)}
+          className={cn('w-full justify-between min-h-10 h-auto', className)}
         >
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-1 flex-wrap flex-1">
             {selected.length === 0 ? (
               <span className="text-muted-foreground">{placeholder}</span>
             ) : (
-              <>
-                {selected.slice(0, 2).map((value) => {
-                  const option = options.find((opt) => opt.value === value)
-                  return (
-                    <Badge
-                      key={value}
-                      variant="secondary"
-                      className="mr-1 cursor-pointer hover:bg-secondary/80"
-                      onClick={(e: React.MouseEvent) => {
-                        e.stopPropagation()
-                        handleRemove(value)
-                      }}
-                    >
-                      {option?.label || value}
-                      <X className="ml-1 h-3 w-3" strokeWidth={2} fill="none" />
-                    </Badge>
-                  )
-                })}
-                {selected.length > 2 && (
-                  <Badge variant="secondary" className="mr-1">
-                    +{selected.length - 2}
+              selected.map((value) => {
+                const option = options.find((opt) => opt.value === value)
+                return (
+                  <Badge
+                    key={value}
+                    variant="secondary"
+                    className="cursor-pointer hover:bg-secondary/80"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      handleRemove(value)
+                    }}
+                  >
+                    {option?.label || value}
+                    <X className="ml-1 h-3 w-3" strokeWidth={2} fill="none" />
                   </Badge>
-                )}
-              </>
+                )
+              })
             )}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" strokeWidth={2} fill="none" />

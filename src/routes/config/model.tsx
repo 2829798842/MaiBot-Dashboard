@@ -38,6 +38,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import { Plus, Pencil, Trash2, Save, Search } from 'lucide-react'
 import { getModelConfig, updateModelConfig, updateModelConfigSection } from '@/lib/config-api'
 import { useToast } from '@/hooks/use-toast'
@@ -88,6 +90,8 @@ export function ModelConfigPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedModels, setSelectedModels] = useState<Set<number>>(new Set())
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
 
   // 用于防抖的定时器
@@ -284,6 +288,54 @@ export function ModelConfigPage() {
     setDeletingIndex(null)
   }
 
+  // 切换单个模型选择
+  const toggleModelSelection = (index: number) => {
+    const newSelected = new Set(selectedModels)
+    if (newSelected.has(index)) {
+      newSelected.delete(index)
+    } else {
+      newSelected.add(index)
+    }
+    setSelectedModels(newSelected)
+  }
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    if (selectedModels.size === filteredModels.length) {
+      setSelectedModels(new Set())
+    } else {
+      const allIndices = filteredModels.map((_, idx) => 
+        models.findIndex(m => m === filteredModels[idx])
+      )
+      setSelectedModels(new Set(allIndices))
+    }
+  }
+
+  // 打开批量删除确认对话框
+  const openBatchDeleteDialog = () => {
+    if (selectedModels.size === 0) {
+      toast({
+        title: '提示',
+        description: '请先选择要删除的模型',
+        variant: 'default',
+      })
+      return
+    }
+    setBatchDeleteDialogOpen(true)
+  }
+
+  // 确认批量删除
+  const handleConfirmBatchDelete = () => {
+    const newModels = models.filter((_, index) => !selectedModels.has(index))
+    setModels(newModels)
+    setSelectedModels(new Set())
+    setBatchDeleteDialogOpen(false)
+    toast({
+      title: '批量删除成功',
+      description: `已删除 ${selectedModels.size} 个模型`,
+    })
+  }
+
   // 更新任务配置
   const updateTaskConfig = (
     taskName: keyof ModelTaskConfig,
@@ -310,6 +362,27 @@ export function ModelConfigPage() {
       model.api_provider.toLowerCase().includes(query)
     )
   })
+
+  // 检查模型是否被任务使用
+  const isModelUsed = (modelName: string): boolean => {
+    if (!taskConfig) return false
+    
+    const allTaskLists = [
+      taskConfig.utils?.model_list || [],
+      taskConfig.utils_small?.model_list || [],
+      taskConfig.tool_use?.model_list || [],
+      taskConfig.replyer?.model_list || [],
+      taskConfig.planner?.model_list || [],
+      taskConfig.vlm?.model_list || [],
+      taskConfig.voice?.model_list || [],
+      taskConfig.embedding?.model_list || [],
+      taskConfig.lpmm_entity_extract?.model_list || [],
+      taskConfig.lpmm_rdf_build?.model_list || [],
+      taskConfig.lpmm_qa?.model_list || [],
+    ]
+    
+    return allTaskLists.some(list => list.includes(modelName))
+  }
 
   if (loading) {
     return (
@@ -354,10 +427,23 @@ export function ModelConfigPage() {
               <p className="text-sm text-muted-foreground">
                 配置可用的模型列表
               </p>
-              <Button onClick={() => openEditDialog(null, null)} size="sm" variant="outline" className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
-                添加模型
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                {selectedModels.size > 0 && (
+                  <Button 
+                    onClick={openBatchDeleteDialog} 
+                    size="sm" 
+                    variant="destructive" 
+                    className="w-full sm:w-auto"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
+                    批量删除 ({selectedModels.size})
+                  </Button>
+                )}
+                <Button onClick={() => openEditDialog(null, null)} size="sm" variant="outline" className="w-full sm:w-auto">
+                  <Plus className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
+                  添加模型
+                </Button>
+              </div>
             </div>
 
           {/* 搜索框 */}
@@ -385,52 +471,63 @@ export function ModelConfigPage() {
                 {searchQuery ? '未找到匹配的模型' : '暂无模型配置'}
               </div>
             ) : (
-              filteredModels.map((model, index) => (
-                <div key={index} className="rounded-lg border bg-card p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base">{model.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-1 break-all" title={model.model_identifier}>
-                        {model.model_identifier}
-                      </p>
+              filteredModels.map((model, index) => {
+                const used = isModelUsed(model.name)
+                return (
+                  <div key={index} className="rounded-lg border bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-base">{model.name}</h3>
+                          <Badge 
+                            variant={used ? "default" : "secondary"}
+                            className={used ? "bg-green-600 hover:bg-green-700" : ""}
+                          >
+                            {used ? '已使用' : '未使用'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground break-all" title={model.model_identifier}>
+                          {model.model_identifier}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(model, index)}
+                        >
+                          <Pencil className="h-4 w-4" strokeWidth={2} fill="none" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDeleteDialog(index)}
+                        >
+                          <Trash2 className="h-4 w-4" strokeWidth={2} fill="none" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(model, index)}
-                      >
-                        <Pencil className="h-4 w-4" strokeWidth={2} fill="none" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDeleteDialog(index)}
-                      >
-                        <Trash2 className="h-4 w-4" strokeWidth={2} fill="none" />
-                      </Button>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground text-xs">提供商</span>
+                        <p className="font-medium">{model.api_provider}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">强制流式</span>
+                        <p className="font-medium">{model.force_stream_mode ? '是' : '否'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">输入价格</span>
+                        <p className="font-medium">¥{model.price_in}/M</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">输出价格</span>
+                        <p className="font-medium">¥{model.price_out}/M</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground text-xs">提供商</span>
-                      <p className="font-medium">{model.api_provider}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">强制流式</span>
-                      <p className="font-medium">{model.force_stream_mode ? '是' : '否'}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">输入价格</span>
-                      <p className="font-medium">¥{model.price_in}/M</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">输出价格</span>
-                      <p className="font-medium">¥{model.price_out}/M</p>
-                    </div>
-                  </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
 
@@ -439,6 +536,13 @@ export function ModelConfigPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedModels.size === filteredModels.length && filteredModels.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="w-24">使用状态</TableHead>
                   <TableHead>模型名称</TableHead>
                   <TableHead>模型标识符</TableHead>
                   <TableHead>提供商</TableHead>
@@ -451,43 +555,61 @@ export function ModelConfigPage() {
               <TableBody>
                 {filteredModels.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                       {searchQuery ? '未找到匹配的模型' : '暂无模型配置'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredModels.map((model, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{model.name}</TableCell>
-                      <TableCell className="max-w-xs truncate" title={model.model_identifier}>
-                        {model.model_identifier}
-                      </TableCell>
-                      <TableCell>{model.api_provider}</TableCell>
-                      <TableCell className="text-right">¥{model.price_in}/M</TableCell>
-                      <TableCell className="text-right">¥{model.price_out}/M</TableCell>
-                      <TableCell className="text-center">
-                        {model.force_stream_mode ? '是' : '否'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(model, index)}
+                  filteredModels.map((model, displayIndex) => {
+                    const actualIndex = models.findIndex(m => m === model)
+                    const used = isModelUsed(model.name)
+                    return (
+                      <TableRow key={displayIndex}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedModels.has(actualIndex)}
+                            onCheckedChange={() => toggleModelSelection(actualIndex)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={used ? "default" : "secondary"}
+                            className={used ? "bg-green-600 hover:bg-green-700" : ""}
                           >
-                            <Pencil className="h-4 w-4" strokeWidth={2} fill="none" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDeleteDialog(index)}
-                          >
-                            <Trash2 className="h-4 w-4" strokeWidth={2} fill="none" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                            {used ? '已使用' : '未使用'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{model.name}</TableCell>
+                        <TableCell className="max-w-xs truncate" title={model.model_identifier}>
+                          {model.model_identifier}
+                        </TableCell>
+                        <TableCell>{model.api_provider}</TableCell>
+                        <TableCell className="text-right">¥{model.price_in}/M</TableCell>
+                        <TableCell className="text-right">¥{model.price_out}/M</TableCell>
+                        <TableCell className="text-center">
+                          {model.force_stream_mode ? '是' : '否'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(model, actualIndex)}
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={2} fill="none" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openDeleteDialog(actualIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={2} fill="none" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 )}
               </TableBody>
             </Table>
@@ -761,6 +883,25 @@ export function ModelConfigPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>删除</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 批量删除确认对话框 */}
+      <AlertDialog open={batchDeleteDialogOpen} onOpenChange={setBatchDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除选中的 {selectedModels.size} 个模型吗？
+              此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmBatchDelete} className="bg-destructive hover:bg-destructive/90">
+              批量删除
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

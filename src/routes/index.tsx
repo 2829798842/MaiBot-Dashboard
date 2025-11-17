@@ -319,15 +319,17 @@ export function IndexPage() {
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[300px] sm:h-[400px] w-full aspect-auto">
                 <LineChart data={hourly_data}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
                   <XAxis
                     dataKey="timestamp"
                     tickFormatter={(value) => formatDateTime(value)}
                     angle={-45}
                     textAnchor="end"
                     height={60}
+                    stroke="hsl(var(--muted-foreground))"
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <YAxis />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                   <ChartTooltip
                     content={<ChartTooltipContent labelFormatter={(value) => formatDateTime(value as string)} />}
                   />
@@ -351,15 +353,17 @@ export function IndexPage() {
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px] w-full aspect-auto">
                   <BarChart data={hourly_data}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
                     <XAxis
                       dataKey="timestamp"
                       tickFormatter={(value) => formatDateTime(value)}
                       angle={-45}
                       textAnchor="end"
                       height={60}
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
                     />
-                    <YAxis />
+                    <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                     <ChartTooltip
                       content={<ChartTooltipContent labelFormatter={(value) => formatDateTime(value as string)} />}
                     />
@@ -377,15 +381,17 @@ export function IndexPage() {
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px] w-full aspect-auto">
                   <BarChart data={hourly_data}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
                     <XAxis
                       dataKey="timestamp"
                       tickFormatter={(value) => formatDateTime(value)}
                       angle={-45}
                       textAnchor="end"
                       height={60}
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
                     />
-                    <YAxis />
+                    <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                     <ChartTooltip
                       content={<ChartTooltipContent labelFormatter={(value) => formatDateTime(value as string)} />}
                     />
@@ -575,16 +581,18 @@ export function IndexPage() {
                 className="h-[400px] sm:h-[500px] w-full aspect-auto"
               >
                 <BarChart data={daily_data}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
                   <XAxis
                     dataKey="timestamp"
                     tickFormatter={(value) => {
                       const date = new Date(value)
                       return `${date.getMonth() + 1}/${date.getDate()}`
                     }}
+                    stroke="hsl(var(--muted-foreground))"
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
+                  <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                   <ChartTooltip
                     content={
                       <ChartTooltipContent

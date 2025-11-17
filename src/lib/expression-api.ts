@@ -1,0 +1,144 @@
+/**
+ * 表达方式管理 API
+ */
+import type {
+  ExpressionListResponse,
+  ExpressionDetailResponse,
+  ExpressionCreateRequest,
+  ExpressionCreateResponse,
+  ExpressionUpdateRequest,
+  ExpressionUpdateResponse,
+  ExpressionDeleteResponse,
+  ExpressionStatsResponse,
+} from '@/types/expression'
+
+const API_BASE = '/api/webui/expression'
+
+/**
+ * 获取认证 header
+ */
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('access-token')
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  }
+}
+
+/**
+ * 获取表达方式列表
+ */
+export async function getExpressionList(params: {
+  page?: number
+  page_size?: number
+  search?: string
+  chat_id?: string
+}): Promise<ExpressionListResponse> {
+  const queryParams = new URLSearchParams()
+  
+  if (params.page) queryParams.append('page', params.page.toString())
+  if (params.page_size) queryParams.append('page_size', params.page_size.toString())
+  if (params.search) queryParams.append('search', params.search)
+  if (params.chat_id) queryParams.append('chat_id', params.chat_id)
+  
+  const response = await fetch(`${API_BASE}/list?${queryParams}`, {
+    headers: getAuthHeaders(),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '获取表达方式列表失败')
+  }
+  
+  return response.json()
+}
+
+/**
+ * 获取表达方式详细信息
+ */
+export async function getExpressionDetail(expressionId: number): Promise<ExpressionDetailResponse> {
+  const response = await fetch(`${API_BASE}/${expressionId}`, {
+    headers: getAuthHeaders(),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '获取表达方式详情失败')
+  }
+  
+  return response.json()
+}
+
+/**
+ * 创建表达方式
+ */
+export async function createExpression(
+  data: ExpressionCreateRequest
+): Promise<ExpressionCreateResponse> {
+  const response = await fetch(`${API_BASE}/`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '创建表达方式失败')
+  }
+  
+  return response.json()
+}
+
+/**
+ * 更新表达方式（增量更新）
+ */
+export async function updateExpression(
+  expressionId: number,
+  data: ExpressionUpdateRequest
+): Promise<ExpressionUpdateResponse> {
+  const response = await fetch(`${API_BASE}/${expressionId}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '更新表达方式失败')
+  }
+  
+  return response.json()
+}
+
+/**
+ * 删除表达方式
+ */
+export async function deleteExpression(expressionId: number): Promise<ExpressionDeleteResponse> {
+  const response = await fetch(`${API_BASE}/${expressionId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '删除表达方式失败')
+  }
+  
+  return response.json()
+}
+
+/**
+ * 获取表达方式统计数据
+ */
+export async function getExpressionStats(): Promise<ExpressionStatsResponse> {
+  const response = await fetch(`${API_BASE}/stats/summary`, {
+    headers: getAuthHeaders(),
+  })
+  
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '获取统计数据失败')
+  }
+  
+  return response.json()
+}

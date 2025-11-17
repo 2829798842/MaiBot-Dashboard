@@ -9,7 +9,7 @@ import { ModelProviderConfigPage } from './routes/config/modelProvider'
 import { ModelConfigPage } from './routes/config/model'
 import { EmojiManagementPage } from './routes/resource/emoji'
 import { ExpressionManagementPage } from './routes/resource/expression'
-import { RelationshipManagementPage } from './routes/resource/relationship'
+import { PersonManagementPage } from './routes/person'
 import { LogViewerPage } from './routes/logs'
 import { StatisticsPage } from './routes/statistics'
 import { PluginsPage } from './routes/plugins'
@@ -21,7 +21,7 @@ const rootRoute = createRootRoute({
   component: () => (
     <>
       <Outlet />
-      <TanStackRouterDevtools />
+      {import.meta.env.DEV && <TanStackRouterDevtools />}
     </>
   ),
   beforeLoad: () => {
@@ -92,11 +92,11 @@ const expressionManagementRoute = createRoute({
   component: ExpressionManagementPage,
 })
 
-// 资源管理路由 - 人物关系管理
-const relationshipManagementRoute = createRoute({
+// 资源管理路由 - 人物信息管理
+const personManagementRoute = createRoute({
   getParentRoute: () => protectedRoute,
-  path: '/resource/relationship',
-  component: RelationshipManagementPage,
+  path: '/resource/person',
+  component: PersonManagementPage,
 })
 
 // 日志查看器路由
@@ -144,7 +144,7 @@ const routeTree = rootRoute.addChildren([
     modelConfigRoute,
     emojiManagementRoute,
     expressionManagementRoute,
-    relationshipManagementRoute,
+    personManagementRoute,
     statisticsRoute,
     pluginsRoute,
     logsRoute,

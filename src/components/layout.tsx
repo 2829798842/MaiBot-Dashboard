@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes, Smile, MessageSquare, Users, FileSearch, BarChart3, Package } from 'lucide-react'
+import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes, Smile, MessageSquare, UserCircle, FileSearch, BarChart3, Package } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { useTheme, toggleThemeWithTransition } from './use-theme'
@@ -54,7 +54,7 @@ export function Layout({ children }: LayoutProps) {
       items: [
         { icon: Smile, label: '表情包管理', path: '/resource/emoji' },
         { icon: MessageSquare, label: '表达方式管理', path: '/resource/expression' },
-        { icon: Users, label: '人物关系管理', path: '/resource/relationship' },
+        { icon: UserCircle, label: '人物信息管理', path: '/resource/person' },
       ],
     },
     {
