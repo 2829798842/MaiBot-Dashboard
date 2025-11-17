@@ -34,18 +34,18 @@ import {
 
 export function SettingsPage() {
   return (
-    <div className="container mx-auto p-6 max-w-5xl space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* 页面标题 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">系统设置</h1>
-          <p className="text-muted-foreground mt-2">管理您的应用偏好设置</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">系统设置</h1>
+          <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理您的应用偏好设置</p>
         </div>
       </div>
 
       {/* 标签页 */}
       <Tabs defaultValue="appearance" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-full sm:max-w-2xl grid-cols-4">
           <TabsTrigger value="appearance" className="gap-2">
             <Palette className="h-4 w-4" strokeWidth={2} fill="none" />
             外观

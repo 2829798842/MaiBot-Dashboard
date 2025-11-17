@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes, Smile, MessageSquare, Users, FileSearch } from 'lucide-react'
+import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes, Smile, MessageSquare, Users, FileSearch, BarChart3, Package } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { useTheme, toggleThemeWithTransition } from './use-theme'
@@ -58,8 +58,10 @@ export function Layout({ children }: LayoutProps) {
       ],
     },
     {
-      title: '运维与监控',
+      title: '扩展与监控',
       items: [
+        { icon: BarChart3, label: '统计信息', path: '/statistics' },
+        { icon: Package, label: '插件市场', path: '/plugins' },
         { icon: FileSearch, label: '日志查看器', path: '/logs' },
       ],
     },
@@ -93,7 +95,9 @@ export function Layout({ children }: LayoutProps) {
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card transition-all duration-300 lg:relative lg:z-0',
-          sidebarOpen ? 'w-64' : 'w-16',
+          // 移动端始终显示完整宽度，桌面端根据 sidebarOpen 切换
+          'w-64 lg:w-auto',
+          sidebarOpen ? 'lg:w-64' : 'lg:w-16',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -101,19 +105,25 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex h-16 items-center border-b px-4">
           <div
             className={cn(
-              'relative flex items-center justify-center flex-1 transition-all',
-              !sidebarOpen && 'flex-none w-8'
+              'relative flex items-center justify-center flex-1 transition-all overflow-hidden',
+              // 移动端始终完整显示，桌面端根据 sidebarOpen 切换
+              'lg:flex-1',
+              !sidebarOpen && 'lg:flex-none lg:w-8'
             )}
           >
-            {sidebarOpen ? (
-              <div className="relative inline-block">
-                <span className="font-bold text-2xl text-primary">MaiBot</span>
-                <span className="absolute -top-1 -right-10 text-[10px] font-medium text-muted-foreground">
-                  {formatVersion()}
-                </span>
-              </div>
-            ) : (
-              <span className="font-bold text-primary text-2xl">M</span>
+            {/* 移动端始终显示完整 Logo，桌面端根据 sidebarOpen 切换 */}
+            <div className={cn(
+              "relative inline-block",
+              !sidebarOpen && "lg:hidden"
+            )}>
+              <span className="font-bold text-2xl text-primary whitespace-nowrap">MaiBot</span>
+              <span className="absolute -top-1 -right-10 text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+                {formatVersion()}
+              </span>
+            </div>
+            {/* 折叠时的 Logo - 仅桌面端显示 */}
+            {!sidebarOpen && (
+              <span className="hidden lg:block font-bold text-primary text-2xl">M</span>
             )}
           </div>
           <button
@@ -127,21 +137,28 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-4">
-          <ul className="space-y-6">
+          <ul className={cn(
+            // 移动端始终使用正常间距，桌面端根据 sidebarOpen 切换
+            "space-y-6",
+            !sidebarOpen && "lg:space-y-3"
+          )}>
             {menuSections.map((section, sectionIndex) => (
               <li key={section.title}>
-                {/* 块标题 - 侧边栏展开时显示 */}
-                {sidebarOpen && (
-                  <div className="mb-2 px-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      {section.title}
-                    </h3>
-                  </div>
-                )}
+                {/* 块标题 - 移动端始终可见，桌面端根据 sidebarOpen 切换 */}
+                <div className={cn(
+                  "px-3 h-[1.25rem]",
+                  // 移动端始终显示，桌面端根据状态切换
+                  "mb-2",
+                  !sidebarOpen && "lg:mb-1 lg:invisible"
+                )}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 whitespace-nowrap">
+                    {section.title}
+                  </h3>
+                </div>
 
-                {/* 分割线 - 侧边栏折叠时显示 */}
+                {/* 分割线 - 仅在桌面端折叠时显示 */}
                 {!sidebarOpen && sectionIndex > 0 && (
-                  <div className="mb-4 border-t border-border" />
+                  <div className="hidden lg:block mb-2 border-t border-border" />
                 )}
 
                 {/* 菜单项列表 */}
@@ -160,7 +177,7 @@ export function Layout({ children }: LayoutProps) {
                             isActive
                               ? 'bg-accent text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
-                            !sidebarOpen && 'justify-center px-0'
+                            !sidebarOpen && 'lg:justify-center lg:px-0'
                           )}
                           onClick={() => setMobileMenuOpen(false)}
                         >
@@ -171,17 +188,19 @@ export function Layout({ children }: LayoutProps) {
                           <Icon
                             className={cn(
                               'h-5 w-5 flex-shrink-0',
-                              !sidebarOpen && 'mx-auto',
+                              !sidebarOpen && 'lg:mx-auto',
                               isActive && 'text-primary'
                             )}
                             strokeWidth={2}
                             fill="none"
                           />
-                          {sidebarOpen && (
-                            <span className={cn('text-sm font-medium', isActive && 'font-semibold')}>
-                              {item.label}
-                            </span>
-                          )}
+                          <span className={cn(
+                            'text-sm font-medium whitespace-nowrap animate-in fade-in duration-300 delay-200',
+                            isActive && 'font-semibold',
+                            !sidebarOpen && 'lg:hidden'
+                          )}>
+                            {item.label}
+                          </span>
                         </Link>
                       </li>
                     )

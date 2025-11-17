@@ -11,6 +11,8 @@ import { EmojiManagementPage } from './routes/resource/emoji'
 import { ExpressionManagementPage } from './routes/resource/expression'
 import { RelationshipManagementPage } from './routes/resource/relationship'
 import { LogViewerPage } from './routes/logs'
+import { StatisticsPage } from './routes/statistics'
+import { PluginsPage } from './routes/plugins'
 import { Layout } from './components/layout'
 import { checkAuth } from './hooks/use-auth'
 
@@ -104,6 +106,20 @@ const logsRoute = createRoute({
   component: LogViewerPage,
 })
 
+// 统计信息路由
+const statisticsRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/statistics',
+  component: StatisticsPage,
+})
+
+// 插件市场路由
+const pluginsRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/plugins',
+  component: PluginsPage,
+})
+
 // 设置页路由
 const settingsRoute = createRoute({
   getParentRoute: () => protectedRoute,
@@ -129,6 +145,8 @@ const routeTree = rootRoute.addChildren([
     emojiManagementRoute,
     expressionManagementRoute,
     relationshipManagementRoute,
+    statisticsRoute,
+    pluginsRoute,
     logsRoute,
     settingsRoute,
   ]),
