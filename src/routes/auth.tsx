@@ -18,6 +18,7 @@ import { useAnimation } from '@/hooks/use-animation'
 import { useTheme } from '@/components/use-theme'
 import { checkAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
+import { APP_FULL_NAME } from '@/lib/version'
 
 export function AuthPage() {
   const [token, setToken] = useState('')
@@ -245,7 +246,7 @@ export function AuthPage() {
 
       {/* 页脚信息 */}
       <div className="absolute bottom-4 left-0 right-0 text-center text-xs text-muted-foreground">
-        <p>MaiBot Dashboard v1.0.0</p>
+        <p>{APP_FULL_NAME}</p>
       </div>
     </div>
   )

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useToast } from '@/hooks/use-toast'
 import { validateToken } from '@/lib/token-validator'
+import { APP_VERSION, APP_NAME } from '@/lib/version'
 import {
   Dialog,
   DialogContent,
@@ -653,9 +654,9 @@ function AboutTab() {
   return (
     <div className="space-y-6">
       <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4">关于 MaiBot</h3>
+        <h3 className="text-lg font-semibold mb-4">关于 {APP_NAME}</h3>
         <div className="space-y-2 text-sm text-muted-foreground">
-          <p>版本: 1.0.0</p>
+          <p>版本: {APP_VERSION}</p>
           <p>基于 React 19 + Vite + TanStack Router</p>
         </div>
       </div>

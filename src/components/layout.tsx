@@ -5,6 +5,7 @@ import { useTheme, toggleThemeWithTransition } from './use-theme'
 import { useAuthGuard } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatVersion } from '@/lib/version'
 import type { ReactNode, ComponentType } from 'react'
 import type { LucideProps } from 'lucide-react'
 
@@ -108,7 +109,7 @@ export function Layout({ children }: LayoutProps) {
               <div className="relative inline-block">
                 <span className="font-bold text-2xl text-primary">MaiBot</span>
                 <span className="absolute -top-1 -right-10 text-[10px] font-medium text-muted-foreground">
-                  v1.0.0
+                  {formatVersion()}
                 </span>
               </div>
             ) : (
