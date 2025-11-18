@@ -3359,14 +3359,18 @@ function LPMMSection({
           <>
             <div className="grid gap-2">
               <Label>LPMM 模式</Label>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              <Select
                 value={config.lpmm_mode}
-                onChange={(e) => onChange({ ...config, lpmm_mode: e.target.value })}
+                onValueChange={(value) => onChange({ ...config, lpmm_mode: value })}
               >
-                <option value="classic">经典模式</option>
-                <option value="agent">Agent 模式</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择 LPMM 模式" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="classic">经典模式</SelectItem>
+                  <SelectItem value="agent">Agent 模式</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
