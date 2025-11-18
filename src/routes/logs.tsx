@@ -178,12 +178,12 @@ export function LogViewerPage() {
 
   return (
     <ScrollArea className="h-full">
-      <div className="space-y-4 p-4 sm:p-6">
+      <div className="space-y-4 p-3 sm:p-4 lg:p-6">
         {/* 标题 */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">日志查看器</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">日志查看器</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               实时查看和分析麦麦运行日志
             </p>
           </div>
@@ -191,37 +191,37 @@ export function LogViewerPage() {
           <div className="flex items-center gap-2">
             <div
               className={cn(
-                'h-3 w-3 rounded-full',
+                'h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full',
                 connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
               )}
             />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {connected ? '已连接' : '未连接'}
             </span>
           </div>
         </div>
 
         {/* 控制栏 */}
-        <Card className="p-4">
-          <div className="flex flex-col gap-4">
+        <Card className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {/* 第一行：搜索和筛选 */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               {/* 搜索框 */}
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索日志内容、模块名..."
+                  placeholder="搜索日志..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-9 text-sm"
                 />
               </div>
 
               {/* 日志级别筛选 */}
               <Select value={levelFilter} onValueChange={setLevelFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="w-full sm:w-[140px] lg:w-[180px] h-9 text-sm">
                   <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="日志级别" />
+                  <SelectValue placeholder="级别" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部级别</SelectItem>
@@ -235,7 +235,7 @@ export function LogViewerPage() {
 
               {/* 模块筛选 */}
               <Select value={moduleFilter} onValueChange={setModuleFilter}>
-                <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectTrigger className="w-full sm:w-[160px] lg:w-[200px] h-9 text-sm">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="模块" />
                 </SelectTrigger>
@@ -251,19 +251,22 @@ export function LogViewerPage() {
             </div>
 
             {/* 第二行：时间筛选 */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
               {/* 开始日期 */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      'w-full sm:w-[240px] justify-start text-left font-normal',
+                      'w-full sm:w-[200px] lg:w-[240px] justify-start text-left font-normal h-9',
                       !dateFrom && 'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, 'PPP', { locale: zhCN }) : '开始日期'}
+                    <span className="text-xs sm:text-sm">
+                      {dateFrom ? format(dateFrom, 'PPP', { locale: zhCN }) : '开始日期'}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -282,13 +285,16 @@ export function LogViewerPage() {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      'w-full sm:w-[240px] justify-start text-left font-normal',
+                      'w-full sm:w-[200px] lg:w-[240px] justify-start text-left font-normal h-9',
                       !dateTo && 'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, 'PPP', { locale: zhCN }) : '结束日期'}
+                    <span className="text-xs sm:text-sm">
+                      {dateTo ? format(dateTo, 'PPP', { locale: zhCN }) : '结束日期'}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -308,49 +314,67 @@ export function LogViewerPage() {
                   variant="outline"
                   size="sm"
                   onClick={clearDateFilter}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto h-9"
                 >
-                  <X className="h-4 w-4 mr-2" />
-                  清除时间筛选
+                  <X className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline text-sm">清除时间筛选</span>
+                  <span className="sm:hidden text-sm">清除</span>
                 </Button>
               )}
             </div>
 
             {/* 第三行：操作按钮 */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={autoScroll ? 'default' : 'outline'}
-                size="sm"
-                onClick={toggleAutoScroll}
-              >
-                {autoScroll ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-                <span className="ml-2">
-                  {autoScroll ? '自动滚动' : '已暂停'}
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={autoScroll ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={toggleAutoScroll}
+                  className="flex-1 sm:flex-none h-9"
+                >
+                  {autoScroll ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  <span className="ml-2 text-sm">
+                    {autoScroll ? '自动滚动' : '已暂停'}
+                  </span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="flex-1 sm:flex-none h-9"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span className="ml-2 text-sm">刷新</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleClear}
+                  className="flex-1 sm:flex-none h-9"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="ml-2 text-sm">清空</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExport}
+                  className="flex-1 sm:flex-none h-9"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="ml-2 text-sm">导出</span>
+                </Button>
+              </div>
+              <div className="flex-1 hidden sm:block" />
+              <div className="text-xs sm:text-sm text-muted-foreground flex items-center justify-center sm:justify-end">
+                <span className="font-mono">
+                  {filteredLogs.length} / {logs.length}
                 </span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span className="ml-2">刷新</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleClear}>
-                <Trash2 className="h-4 w-4" />
-                <span className="ml-2">清空</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="h-4 w-4" />
-                <span className="ml-2">导出</span>
-              </Button>
-              <div className="flex-1" />
-              <div className="text-sm text-muted-foreground flex items-center">
-                {filteredLogs.length} / {logs.length} 条日志
+                <span className="ml-1">条日志</span>
               </div>
             </div>
           </div>
@@ -358,10 +382,10 @@ export function LogViewerPage() {
 
         {/* 日志终端 */}
         <Card className="bg-black dark:bg-gray-950 border-gray-800 dark:border-gray-900">
-          <ScrollArea className="h-[calc(100vh-400px)]">
-            <div ref={viewportRef} className="p-4 font-mono text-sm space-y-1">
+          <ScrollArea className="h-[calc(100vh-280px)] sm:h-[calc(100vh-320px)] lg:h-[calc(100vh-400px)]">
+            <div ref={viewportRef} className="p-2 sm:p-3 lg:p-4 font-mono text-xs sm:text-sm space-y-1">
               {filteredLogs.length === 0 ? (
-                <div className="text-gray-500 dark:text-gray-600 text-center py-8">
+                <div className="text-gray-500 dark:text-gray-600 text-center py-8 text-sm">
                   暂无日志数据
                 </div>
               ) : (
@@ -369,34 +393,63 @@ export function LogViewerPage() {
                   <div
                     key={log.id}
                     className={cn(
-                      'flex gap-3 py-1.5 px-3 rounded hover:bg-white/5 transition-colors group',
+                      'py-2 px-2 sm:px-3 rounded hover:bg-white/5 transition-colors group',
                       getLevelBgColor(log.level)
                     )}
                   >
-                    {/* 时间戳 */}
-                    <span className="text-gray-500 dark:text-gray-600 flex-shrink-0 w-[180px]">
-                      {log.timestamp}
-                    </span>
+                    {/* 移动端：垂直布局 */}
+                    <div className="flex flex-col gap-1 sm:hidden">
+                      {/* 第一行：时间戳和级别 */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500 dark:text-gray-600 text-xs">
+                          {log.timestamp}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-xs font-semibold',
+                            getLevelColor(log.level)
+                          )}
+                        >
+                          [{log.level}]
+                        </span>
+                      </div>
+                      {/* 第二行：模块名 */}
+                      <div className="text-cyan-400 dark:text-cyan-500 text-xs truncate">
+                        {log.module}
+                      </div>
+                      {/* 第三行：消息内容 */}
+                      <div className="text-gray-300 dark:text-gray-400 text-xs break-all">
+                        {log.message}
+                      </div>
+                    </div>
 
-                    {/* 日志级别 */}
-                    <span
-                      className={cn(
-                        'flex-shrink-0 w-[80px] font-semibold',
-                        getLevelColor(log.level)
-                      )}
-                    >
-                      [{log.level}]
-                    </span>
+                    {/* 平板/桌面端：水平布局 */}
+                    <div className="hidden sm:flex gap-3 items-start">
+                      {/* 时间戳 */}
+                      <span className="text-gray-500 dark:text-gray-600 flex-shrink-0 w-[140px] lg:w-[180px] text-xs lg:text-sm">
+                        {log.timestamp}
+                      </span>
 
-                    {/* 模块名 */}
-                    <span className="text-cyan-400 dark:text-cyan-500 flex-shrink-0 w-[150px] truncate">
-                      {log.module}
-                    </span>
+                      {/* 日志级别 */}
+                      <span
+                        className={cn(
+                          'flex-shrink-0 w-[70px] lg:w-[80px] font-semibold text-xs lg:text-sm',
+                          getLevelColor(log.level)
+                        )}
+                      >
+                        [{log.level}]
+                      </span>
 
-                    {/* 消息内容 */}
-                    <span className="text-gray-300 dark:text-gray-400 flex-1 break-all">
-                      {log.message}
-                    </span>
+                      {/* 模块名 */}
+                      <span className="text-cyan-400 dark:text-cyan-500 flex-shrink-0 w-[120px] lg:w-[150px] truncate text-xs lg:text-sm">
+                        {log.module}
+                      </span>
+
+                      {/* 消息内容 */}
+                      <span className="text-gray-300 dark:text-gray-400 flex-1 break-all text-xs lg:text-sm">
+                        {log.message}
+                      </span>
+                    </div>
                   </div>
                 ))
               )}
