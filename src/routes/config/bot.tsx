@@ -41,6 +41,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Save, Plus, Trash2, Eye, Clock, FileSearch } from 'lucide-react'
 import { getBotConfig, updateBotConfig, updateBotConfigSection } from '@/lib/config-api'
 import { useToast } from '@/hooks/use-toast'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Info } from 'lucide-react'
 
 interface BotConfig {
   platform: string
@@ -494,6 +496,14 @@ export function BotConfigPage() {
             {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
           </Button>
         </div>
+
+        {/* 重启提示 */}
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            配置更新后需要<strong>重启麦麦</strong>才能生效
+          </AlertDescription>
+        </Alert>
 
         {/* 标签页 */}
         <Tabs defaultValue="bot" className="w-full">

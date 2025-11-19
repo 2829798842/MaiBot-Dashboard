@@ -89,17 +89,17 @@ export function LogViewerPage() {
   const getLevelBgColor = (level: LogEntry['level']) => {
     switch (level) {
       case 'DEBUG':
-        return 'bg-secondary/50'
+        return 'bg-gray-800/30 dark:bg-gray-800/50'
       case 'INFO':
-        return 'bg-blue-500/10 dark:bg-blue-500/20'
+        return 'bg-blue-900/20 dark:bg-blue-500/20'
       case 'WARNING':
-        return 'bg-yellow-500/10 dark:bg-yellow-500/20'
+        return 'bg-yellow-900/20 dark:bg-yellow-500/20'
       case 'ERROR':
-        return 'bg-red-500/10 dark:bg-red-500/20'
+        return 'bg-red-900/20 dark:bg-red-500/20'
       case 'CRITICAL':
-        return 'bg-red-600/20 dark:bg-red-600/30'
+        return 'bg-red-900/30 dark:bg-red-600/30'
       default:
-        return 'bg-muted/50'
+        return 'bg-gray-800/20 dark:bg-gray-800/30'
     }
   }
 

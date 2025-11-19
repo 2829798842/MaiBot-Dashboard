@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Progress } from '@/components/ui/progress'
 import {
   ChartContainer,
   ChartTooltip,
@@ -84,6 +85,7 @@ interface DashboardData {
 export function IndexPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [timeRange, setTimeRange] = useState(24) // 默认24小时
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [hitokoto, setHitokoto] = useState<{ hitokoto: string; from: string } | null>(null)
@@ -117,11 +119,45 @@ export function IndexPage() {
       })
       setDashboardData(response.data)
       setLoading(false)
+      setLoadingProgress(100)
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
       setLoading(false)
+      setLoadingProgress(100)
     }
   }, [timeRange])
+
+  // 伪加载进度条效果
+  useEffect(() => {
+    if (!loading) return
+
+    setLoadingProgress(0)
+    
+    // 快速到15%
+    const timer1 = setTimeout(() => setLoadingProgress(15), 200)
+    // 到30%
+    const timer2 = setTimeout(() => setLoadingProgress(30), 800)
+    // 到45%
+    const timer3 = setTimeout(() => setLoadingProgress(45), 2000)
+    // 到60%
+    const timer4 = setTimeout(() => setLoadingProgress(60), 4000)
+    // 到75%
+    const timer5 = setTimeout(() => setLoadingProgress(75), 6500)
+    // 到85%
+    const timer6 = setTimeout(() => setLoadingProgress(85), 9000)
+    // 到92%
+    const timer7 = setTimeout(() => setLoadingProgress(92), 11000)
+
+    return () => {
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+      clearTimeout(timer3)
+      clearTimeout(timer4)
+      clearTimeout(timer5)
+      clearTimeout(timer6)
+      clearTimeout(timer7)
+    }
+  }, [loading])
 
   useEffect(() => {
     fetchDashboardData()
@@ -142,9 +178,16 @@ export function IndexPage() {
   if (loading || !dashboardData) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <div className="text-center space-y-4">
-          <RefreshCw className="h-12 w-12 animate-spin mx-auto text-muted-foreground" />
-          <p className="text-muted-foreground">加载统计数据中...</p>
+        <div className="text-center space-y-6 w-full max-w-md px-4">
+          <RefreshCw className="h-12 w-12 animate-spin mx-auto text-primary" />
+          <div className="space-y-2">
+            <p className="text-lg font-medium">加载统计数据中...</p>
+            <p className="text-sm text-muted-foreground">正在获取麦麦运行数据</p>
+          </div>
+          <div className="space-y-2">
+            <Progress value={loadingProgress} className="h-2" />
+            <p className="text-xs text-muted-foreground">{loadingProgress}%</p>
+          </div>
         </div>
       </div>
     )

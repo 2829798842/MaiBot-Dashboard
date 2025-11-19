@@ -44,6 +44,18 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { Progress } from '@/components/ui/progress'
 
+// 分类名称映射
+const CATEGORY_NAMES: Record<string, string> = {
+  'Group Management': '群组管理',
+  'Entertainment & Interaction': '娱乐互动',
+  'Utility Tools': '实用工具',
+  'Content Generation': '内容生成',
+  'Multimedia': '多媒体',
+  'External Integration': '外部集成',
+  'Data Analysis & Insights': '数据分析与洞察',
+  'Other': '其他',
+}
+
 export function PluginsPage() {
   const navigate = useNavigate()
   const [selectedPlugin, setSelectedPlugin] = useState<PluginInfo | null>(null)
@@ -575,13 +587,13 @@ export function PluginsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部分类</SelectItem>
-                  <SelectItem value="Developer Tools">开发工具</SelectItem>
-                  <SelectItem value="AI Enhancement">AI 增强</SelectItem>
-                  <SelectItem value="Utility">工具类</SelectItem>
-                  <SelectItem value="Entertainment">娱乐</SelectItem>
-                  <SelectItem value="Integration">集成</SelectItem>
-                  <SelectItem value="Data Analysis">数据分析</SelectItem>
-                  <SelectItem value="Automation">自动化</SelectItem>
+                  <SelectItem value="Group Management">群组管理</SelectItem>
+                  <SelectItem value="Entertainment & Interaction">娱乐互动</SelectItem>
+                  <SelectItem value="Utility Tools">实用工具</SelectItem>
+                  <SelectItem value="Content Generation">内容生成</SelectItem>
+                  <SelectItem value="Multimedia">多媒体</SelectItem>
+                  <SelectItem value="External Integration">外部集成</SelectItem>
+                  <SelectItem value="Data Analysis & Insights">数据分析与洞察</SelectItem>
                   <SelectItem value="Other">其他</SelectItem>
                 </SelectContent>
               </Select>
@@ -709,7 +721,7 @@ export function PluginsPage() {
                   <div className="flex flex-col gap-1">
                     {plugin.manifest?.categories && plugin.manifest.categories[0] && (
                       <Badge variant="secondary" className="text-xs whitespace-nowrap">
-                        {plugin.manifest.categories[0]}
+                        {CATEGORY_NAMES[plugin.manifest.categories[0]] || plugin.manifest.categories[0]}
                       </Badge>
                     )}
                     {getStatusBadge(plugin)}
@@ -846,7 +858,7 @@ export function PluginsPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                     {selectedPlugin.manifest.categories && selectedPlugin.manifest.categories[0] && (
-                      <Badge variant="secondary">{selectedPlugin.manifest.categories[0]}</Badge>
+                      <Badge variant="secondary">{CATEGORY_NAMES[selectedPlugin.manifest.categories[0]] || selectedPlugin.manifest.categories[0]}</Badge>
                     )}
                     {getStatusBadge(selectedPlugin)}
                   </div>

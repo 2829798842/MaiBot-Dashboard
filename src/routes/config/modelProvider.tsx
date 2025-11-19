@@ -37,9 +37,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, Pencil, Trash2, Save, Eye, EyeOff, Copy, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, Save, Eye, EyeOff, Copy, Search, Info } from 'lucide-react'
 import { getModelConfig, updateModelConfig, updateModelConfigSection } from '@/lib/config-api'
 import { useToast } from '@/hooks/use-toast'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface APIProvider {
   name: string
@@ -342,6 +343,14 @@ export function ModelProviderConfigPage() {
           </Button>
         </div>
       </div>
+
+      {/* 重启提示 */}
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          配置更新后需要<strong>重启麦麦</strong>才能生效
+        </AlertDescription>
+      </Alert>
 
       <ScrollArea className="h-[calc(100vh-260px)]">
         {/* 搜索框 */}

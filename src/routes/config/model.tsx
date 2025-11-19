@@ -40,10 +40,11 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Pencil, Trash2, Save, Search } from 'lucide-react'
+import { Plus, Pencil, Trash2, Save, Search, Info } from 'lucide-react'
 import { getModelConfig, updateModelConfig, updateModelConfigSection } from '@/lib/config-api'
 import { useToast } from '@/hooks/use-toast'
 import { MultiSelect } from '@/components/ui/multi-select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface ModelInfo {
   model_identifier: string
@@ -255,13 +256,17 @@ export function ModelConfigPage() {
   const handleSaveEdit = () => {
     if (!editingModel) return
 
+    let newModels: ModelInfo[]
     if (editingIndex !== null) {
-      const newModels = [...models]
+      newModels = [...models]
       newModels[editingIndex] = editingModel
-      setModels(newModels)
     } else {
-      setModels([...models, editingModel])
+      newModels = [...models, editingModel]
     }
+    
+    setModels(newModels)
+    // 立即更新模型名称列表
+    setModelNames(newModels.map((m) => m.name))
 
     setEditDialogOpen(false)
     setEditingModel(null)
@@ -279,6 +284,8 @@ export function ModelConfigPage() {
     if (deletingIndex !== null) {
       const newModels = models.filter((_, i) => i !== deletingIndex)
       setModels(newModels)
+      // 立即更新模型名称列表
+      setModelNames(newModels.map((m) => m.name))
       toast({
         title: '删除成功',
         description: '模型已从列表中移除',
@@ -328,6 +335,8 @@ export function ModelConfigPage() {
   const handleConfirmBatchDelete = () => {
     const newModels = models.filter((_, index) => !selectedModels.has(index))
     setModels(newModels)
+    // 立即更新模型名称列表
+    setModelNames(newModels.map((m) => m.name))
     setSelectedModels(new Set())
     setBatchDeleteDialogOpen(false)
     toast({
@@ -415,6 +424,14 @@ export function ModelConfigPage() {
             {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
           </Button>
         </div>
+
+        {/* 重启提示 */}
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            配置更新后需要<strong>重启麦麦</strong>才能生效
+          </AlertDescription>
+        </Alert>
 
         {/* 标签页 */}
         <Tabs defaultValue="models" className="w-full">
