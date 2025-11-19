@@ -3,7 +3,6 @@ import {
   Search,
   Filter,
   RefreshCw,
-  Image as ImageIcon,
   Trash2,
   Edit,
   Info,
@@ -812,7 +811,7 @@ function EmojiEditDialog({
               <Checkbox
                 id="is_registered"
                 checked={isRegistered}
-                onCheckedChange={setIsRegistered}
+                onCheckedChange={(checked) => setIsRegistered(checked === true)}
               />
               <Label htmlFor="is_registered" className="cursor-pointer">
                 已注册
@@ -823,7 +822,7 @@ function EmojiEditDialog({
               <Checkbox
                 id="is_banned"
                 checked={isBanned}
-                onCheckedChange={setIsBanned}
+                onCheckedChange={(checked) => setIsBanned(checked === true)}
               />
               <Label htmlFor="is_banned" className="cursor-pointer">
                 已封禁
