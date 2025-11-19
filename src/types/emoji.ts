@@ -14,7 +14,7 @@ export interface Emoji {
   query_count: number
   is_registered: boolean
   is_banned: boolean
-  emotion: string[] | null
+  emotion: string | null
   record_time: number
   register_time: number | null
   usage_count: number
@@ -47,7 +47,7 @@ export interface EmojiUpdateRequest {
   description?: string
   is_registered?: boolean
   is_banned?: boolean
-  emotion?: string[]
+  emotion?: string
 }
 
 /**

@@ -808,15 +808,20 @@ function EmojiDetailDialog({
           <div>
             <Label className="text-muted-foreground">情绪标签</Label>
             <div className="mt-2 flex flex-wrap gap-2">
-              {emoji.emotion && emoji.emotion.length > 0 ? (
-                emoji.emotion.map((tag, index) => (
-                  <Badge key={index} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))
-              ) : (
-                <span className="text-sm text-muted-foreground">无</span>
-              )}
+              {(() => {
+                const emotionArray = emoji.emotion
+                  ? emoji.emotion.split(/[,,]/).map((s: string) => s.trim()).filter(Boolean)
+                  : []
+                return emotionArray.length > 0 ? (
+                  emotionArray.map((tag: string, index: number) => (
+                    <Badge key={index} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">无</span>
+                )
+              })()}
             </div>
           </div>
 
@@ -887,7 +892,7 @@ function EmojiEditDialog({
   useEffect(() => {
     if (emoji) {
       setDescription(emoji.description || '')
-      setEmotionInput(emoji.emotion ? emoji.emotion.join(', ') : '')
+      setEmotionInput(emoji.emotion || '')
       setIsRegistered(emoji.is_registered)
       setIsBanned(emoji.is_banned)
     }
@@ -898,14 +903,16 @@ function EmojiEditDialog({
 
     try {
       setSaving(true)
-      const emotionArray = emotionInput
+      // 将输入的标签字符串标准化为逗号分隔格式
+      const emotionString = emotionInput
         .split(/[,,]/)
         .map((s) => s.trim())
         .filter(Boolean)
+        .join(',')
 
       await updateEmoji(emoji.id, {
         description: description || undefined,
-        emotion: emotionArray.length > 0 ? emotionArray : undefined,
+        emotion: emotionString || undefined,
         is_registered: isRegistered,
         is_banned: isBanned,
       })
@@ -1000,8 +1007,13 @@ function EmojiEditDialog({
 }
 
 // 情绪标签组件
-function EmotionTags({ emotions }: { emotions: string[] | null | undefined }) {
-  if (!emotions || emotions.length === 0) {
+function EmotionTags({ emotions }: { emotions: string | null | undefined }) {
+  // 解析emotion字符串为数组（支持中文和英文逗号分隔）
+  const emotionArray = emotions
+    ? emotions.split(/[,,]/).map(s => s.trim()).filter(Boolean)
+    : []
+
+  if (emotionArray.length === 0) {
     return <span className="text-xs text-muted-foreground">-</span>
   }
 
@@ -1012,8 +1024,8 @@ function EmotionTags({ emotions }: { emotions: string[] | null | undefined }) {
   }
 
   // 最多显示3个标签
-  const displayEmotions = emotions.slice(0, 3)
-  const remainingCount = emotions.length - 3
+  const displayEmotions = emotionArray.slice(0, 3)
+  const remainingCount = emotionArray.length - 3
 
   return (
     <div className="flex flex-wrap gap-1 max-w-full overflow-hidden">
@@ -1031,7 +1043,7 @@ function EmotionTags({ emotions }: { emotions: string[] | null | undefined }) {
         <Badge 
           variant="outline" 
           className="text-xs flex-shrink-0"
-          title={`还有 ${remainingCount} 个标签: ${emotions.slice(3).join(', ')}`}
+          title={`还有 ${remainingCount} 个标签: ${emotionArray.slice(3).join(', ')}`}
         >
           +{remainingCount}
         </Badge>

@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Pencil, Trash2, Save, Search, Info, Power } from 'lucide-react'
@@ -1090,17 +1091,31 @@ function TaskConfigCard({
         {/* 温度和最大 Token */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {!hideTemperature && (
-            <div className="grid gap-2">
-              <Label>温度</Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0"
-                max="2"
-                value={taskConfig.temperature || 0.3}
-                onChange={(e) =>
-                  onChange('temperature', parseFloat(e.target.value))
-                }
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label>温度</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                  value={taskConfig.temperature ?? 0.3}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value)
+                    if (!isNaN(value) && value >= 0 && value <= 1) {
+                      onChange('temperature', value)
+                    }
+                  }}
+                  className="w-20 h-8 text-sm"
+                />
+              </div>
+              <Slider
+                value={[taskConfig.temperature ?? 0.3]}
+                onValueChange={(values) => onChange('temperature', values[0])}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
               />
             </div>
           )}
@@ -1112,7 +1127,7 @@ function TaskConfigCard({
                 type="number"
                 step="1"
                 min="1"
-                value={taskConfig.max_tokens || 1024}
+                value={taskConfig.max_tokens ?? 1024}
                 onChange={(e) => onChange('max_tokens', parseInt(e.target.value))}
               />
             </div>
