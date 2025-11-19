@@ -13,6 +13,7 @@ import { ExpressionManagementPage } from './routes/resource/expression'
 import { PersonManagementPage } from './routes/person'
 import { LogViewerPage } from './routes/logs'
 import { PluginsPage } from './routes/plugins'
+import { PluginConfigPage } from './routes/plugin-config'
 import { PluginMirrorsPage } from './routes/plugin-mirrors'
 import { Layout } from './components/layout'
 import { checkAuth } from './hooks/use-auth'
@@ -121,6 +122,13 @@ const pluginsRoute = createRoute({
   component: PluginsPage,
 })
 
+// 插件配置路由
+const pluginConfigRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/plugin-config',
+  component: PluginConfigPage,
+})
+
 // 插件镜像源配置路由
 const pluginMirrorsRoute = createRoute({
   getParentRoute: () => protectedRoute,
@@ -155,6 +163,7 @@ const routeTree = rootRoute.addChildren([
     expressionManagementRoute,
     personManagementRoute,
     pluginsRoute,
+    pluginConfigRoute,
     pluginMirrorsRoute,
     logsRoute,
     settingsRoute,

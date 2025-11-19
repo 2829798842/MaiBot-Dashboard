@@ -28,6 +28,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import {
   Select,
@@ -37,10 +38,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, Pencil, Trash2, Save, Eye, EyeOff, Copy, Search, Info } from 'lucide-react'
+import { Plus, Pencil, Trash2, Save, Eye, EyeOff, Copy, Search, Info, Power } from 'lucide-react'
 import { getModelConfig, updateModelConfig, updateModelConfigSection } from '@/lib/config-api'
+import { restartMaiBot } from '@/lib/system-api'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { RestartingOverlay } from '@/components/RestartingOverlay'
 
 interface APIProvider {
   name: string
@@ -58,6 +61,8 @@ export function ModelProviderConfigPage() {
   const [saving, setSaving] = useState(false)
   const [autoSaving, setAutoSaving] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [restarting, setRestarting] = useState(false)
+  const [showRestartOverlay, setShowRestartOverlay] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingProvider, setEditingProvider] = useState<APIProvider | null>(null)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
@@ -90,6 +95,73 @@ export function ModelProviderConfigPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 重启麦麦
+  const handleRestart = async () => {
+    try {
+      setRestarting(true)
+      // 发送重启请求（不等待响应，因为服务器会立即关闭）
+      restartMaiBot().catch(() => {
+        // 忽略网络错误，这是预期行为
+      })
+      // 立即显示遮罩层并开始状态检测
+      setShowRestartOverlay(true)
+    } catch (error) {
+      console.error('重启失败:', error)
+      setShowRestartOverlay(false)
+      toast({
+        title: '重启失败',
+        description: '无法发送重启请求，请手动重启',
+        variant: 'destructive',
+      })
+      setRestarting(false)
+    }
+  }
+
+  // 保存并重启
+  const handleSaveAndRestart = async () => {
+    try {
+      setSaving(true)
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current)
+      }
+      const config = await getModelConfig()
+      config.api_providers = providers
+      await updateModelConfig(config)
+      setHasUnsavedChanges(false)
+      toast({
+        title: '保存成功',
+        description: '正在重启麦麦...',
+      })
+      await handleRestart()
+    } catch (error) {
+      console.error('保存配置失败:', error)
+      toast({
+        title: '保存失败',
+        description: (error as Error).message,
+        variant: 'destructive',
+      })
+      setSaving(false)
+    }
+  }
+
+  // 重启完成回调
+  const handleRestartComplete = () => {
+    // 清除token，避免自动登录
+    localStorage.removeItem('access-token')
+    window.location.href = '/auth'
+  }
+
+  // 重启失败回调
+  const handleRestartFailed = () => {
+    setShowRestartOverlay(false)
+    setRestarting(false)
+    toast({
+      title: '重启超时',
+      description: '服务未能在预期时间内恢复，请手动检查或刷新页面',
+      variant: 'destructive',
+    })
   }
 
   // 自动保存函数（使用增量 API）
@@ -333,14 +405,43 @@ export function ModelProviderConfigPage() {
           </Button>
           <Button 
             onClick={saveConfig} 
-            disabled={saving || autoSaving || !hasUnsavedChanges} 
+            disabled={saving || autoSaving || !hasUnsavedChanges || restarting} 
             size="sm" 
-            variant="default"
+            variant="outline"
             className="w-full sm:w-auto"
           >
             <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
             {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                disabled={saving || autoSaving || restarting}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                <Power className="mr-2 h-4 w-4" />
+                {restarting ? '重启中...' : hasUnsavedChanges ? '保存并重启' : '重启麦麦'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认重启麦麦？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {hasUnsavedChanges 
+                    ? '当前有未保存的配置更改。点击确认将先保存配置，然后重启麦麦使新配置生效。重启过程中麦麦将暂时离线。'
+                    : '即将重启麦麦主程序。重启过程中麦麦将暂时离线，配置将在重启后生效。'
+                  }
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction onClick={hasUnsavedChanges ? handleSaveAndRestart : handleRestart}>
+                  {hasUnsavedChanges ? '保存并重启' : '确认重启'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -348,7 +449,7 @@ export function ModelProviderConfigPage() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          配置更新后需要<strong>重启麦麦</strong>才能生效
+          配置更新后需要<strong>重启麦麦</strong>才能生效。你可以点击右上角的"保存并重启"按钮一键完成保存和重启。
         </AlertDescription>
       </Alert>
 
@@ -693,6 +794,14 @@ export function ModelProviderConfigPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 重启遮罩层 */}
+      {showRestartOverlay && (
+        <RestartingOverlay 
+          onRestartComplete={handleRestartComplete}
+          onRestartFailed={handleRestartFailed}
+        />
+      )}
     </div>
   )
 }

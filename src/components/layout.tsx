@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes, Smile, MessageSquare, UserCircle, FileSearch, Package, BookOpen, Search, RotateCw, Palette, ExternalLink } from 'lucide-react'
+import { Menu, Moon, Sun, ChevronLeft, Home, Settings, LogOut, FileText, Server, Boxes, Smile, MessageSquare, UserCircle, FileSearch, Package, BookOpen, Search, RotateCw, Palette, ExternalLink, Sliders } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Link, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { useTheme, toggleThemeWithTransition } from './use-theme'
@@ -94,6 +94,7 @@ export function Layout({ children }: LayoutProps) {
       title: '扩展与监控',
       items: [
         { icon: Package, label: '插件市场', path: '/plugins' },
+        { icon: Sliders, label: '插件配置', path: '/plugin-config' },
         { icon: FileSearch, label: '日志查看器', path: '/logs' },
       ],
     },

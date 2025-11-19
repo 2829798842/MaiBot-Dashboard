@@ -113,7 +113,7 @@ export function IndexPage() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('access-token')
       const response = await axios.get(`/api/webui/statistics/dashboard?hours=${timeRange}`, {
         headers: { Authorization: `Bearer ${token}` },
       })

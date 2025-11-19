@@ -29,6 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import {
   Select,
@@ -40,11 +41,13 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Pencil, Trash2, Save, Search, Info } from 'lucide-react'
+import { Plus, Pencil, Trash2, Save, Search, Info, Power } from 'lucide-react'
 import { getModelConfig, updateModelConfig, updateModelConfigSection } from '@/lib/config-api'
+import { restartMaiBot } from '@/lib/system-api'
 import { useToast } from '@/hooks/use-toast'
 import { MultiSelect } from '@/components/ui/multi-select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { RestartingOverlay } from '@/components/RestartingOverlay'
 
 interface ModelInfo {
   model_identifier: string
@@ -85,6 +88,8 @@ export function ModelConfigPage() {
   const [saving, setSaving] = useState(false)
   const [autoSaving, setAutoSaving] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [restarting, setRestarting] = useState(false)
+  const [showRestartOverlay, setShowRestartOverlay] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingModel, setEditingModel] = useState<ModelInfo | null>(null)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
@@ -93,7 +98,7 @@ export function ModelConfigPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedModels, setSelectedModels] = useState<Set<number>>(new Set())
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false)
-  const { toast } = useToast()
+  const { toast} = useToast()
 
   // 用于防抖的定时器
   const modelsAutoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -124,6 +129,77 @@ export function ModelConfigPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 重启麦麦
+  const handleRestart = async () => {
+    try {
+      setRestarting(true)
+      // 发送重启请求（不等待响应，因为服务器会立即关闭）
+      restartMaiBot().catch(() => {
+        // 忽略网络错误，这是预期行为
+      })
+      // 立即显示遮罩层并开始状态检测
+      setShowRestartOverlay(true)
+    } catch (error) {
+      console.error('重启失败:', error)
+      setShowRestartOverlay(false)
+      toast({
+        title: '重启失败',
+        description: '无法发送重启请求，请手动重启',
+        variant: 'destructive',
+      })
+      setRestarting(false)
+    }
+  }
+
+  // 保存并重启
+  const handleSaveAndRestart = async () => {
+    try {
+      setSaving(true)
+      if (modelsAutoSaveTimerRef.current) {
+        clearTimeout(modelsAutoSaveTimerRef.current)
+      }
+      if (taskConfigAutoSaveTimerRef.current) {
+        clearTimeout(taskConfigAutoSaveTimerRef.current)
+      }
+      const config = await getModelConfig()
+      config.models = models
+      config.model_task_config = taskConfig
+      await updateModelConfig(config)
+      setHasUnsavedChanges(false)
+      toast({
+        title: '保存成功',
+        description: '正在重启麦麦...',
+      })
+      await handleRestart()
+    } catch (error) {
+      console.error('保存配置失败:', error)
+      toast({
+        title: '保存失败',
+        description: (error as Error).message,
+        variant: 'destructive',
+      })
+      setSaving(false)
+    }
+  }
+
+  // 重启完成回调
+  const handleRestartComplete = () => {
+    // 清除token，避免自动登录
+    localStorage.removeItem('access-token')
+    window.location.href = '/auth'
+  }
+
+  // 重启失败回调
+  const handleRestartFailed = () => {
+    setShowRestartOverlay(false)
+    setRestarting(false)
+    toast({
+      title: '重启超时',
+      description: '服务未能在预期时间内恢复，请手动检查或刷新页面',
+      variant: 'destructive',
+    })
   }
 
   // 自动保存模型列表
@@ -414,22 +490,54 @@ export function ModelConfigPage() {
             <h1 className="text-2xl sm:text-3xl font-bold">模型配置</h1>
             <p className="text-muted-foreground mt-1 sm:mt-2 text-sm sm:text-base">管理模型和任务配置</p>
           </div>
-          <Button 
-            onClick={saveConfig} 
-            disabled={saving || autoSaving || !hasUnsavedChanges} 
-            size="sm"
-            className="w-full sm:w-auto"
-          >
-            <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
-            {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={saveConfig} 
+              disabled={saving || autoSaving || !hasUnsavedChanges || restarting} 
+              size="sm"
+              variant="outline"
+              className="flex-1 sm:flex-none"
+            >
+              <Save className="mr-2 h-4 w-4" strokeWidth={2} fill="none" />
+              {saving ? '保存中...' : autoSaving ? '自动保存中...' : hasUnsavedChanges ? '保存配置' : '已保存'}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  disabled={saving || autoSaving || restarting}
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                >
+                  <Power className="mr-2 h-4 w-4" />
+                  {restarting ? '重启中...' : hasUnsavedChanges ? '保存并重启' : '重启麦麦'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>确认重启麦麦？</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {hasUnsavedChanges 
+                      ? '当前有未保存的配置更改。点击确认将先保存配置，然后重启麦麦使新配置生效。重启过程中麦麦将暂时离线。'
+                      : '即将重启麦麦主程序。重启过程中麦麦将暂时离线，配置将在重启后生效。'
+                    }
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction onClick={hasUnsavedChanges ? handleSaveAndRestart : handleRestart}>
+                    {hasUnsavedChanges ? '保存并重启' : '确认重启'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* 重启提示 */}
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            配置更新后需要<strong>重启麦麦</strong>才能生效
+            配置更新后需要<strong>重启麦麦</strong>才能生效。你可以点击右上角的"保存并重启"按钮一键完成保存和重启。
           </AlertDescription>
         </Alert>
 
@@ -922,6 +1030,14 @@ export function ModelConfigPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 重启遮罩层 */}
+      {showRestartOverlay && (
+        <RestartingOverlay 
+          onRestartComplete={handleRestartComplete}
+          onRestartFailed={handleRestartFailed}
+        />
+      )}
       </div>
     </ScrollArea>
   )
