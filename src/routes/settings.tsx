@@ -1,4 +1,4 @@
-import { Settings as  Palette, Info, Shield, Eye, EyeOff, Copy, RefreshCw, Check, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { Palette, Info, Shield, Eye, EyeOff, Copy, RefreshCw, Check, CheckCircle2, XCircle, AlertTriangle, Settings, RotateCcw } from 'lucide-react'
 import { useTheme } from '@/components/use-theme'
 import { useAnimation } from '@/hooks/use-animation'
 import { useState, useMemo, useEffect } from 'react'
@@ -46,28 +46,36 @@ export function SettingsPage() {
 
       {/* 标签页 */}
       <Tabs defaultValue="appearance" className="w-full">
-        <TabsList className="grid w-full max-w-full sm:max-w-2xl grid-cols-3">
-          <TabsTrigger value="appearance" className="gap-2">
-            <Palette className="h-4 w-4" strokeWidth={2} fill="none" />
-            外观
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-0.5 sm:gap-1 h-auto p-1">
+          <TabsTrigger value="appearance" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} fill="none" />
+            <span>外观</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="h-4 w-4" strokeWidth={2} fill="none" />
-            安全
+          <TabsTrigger value="security" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} fill="none" />
+            <span>安全</span>
           </TabsTrigger>
-          <TabsTrigger value="about" className="gap-2">
-            <Info className="h-4 w-4" strokeWidth={2} fill="none" />
-            关于
+          <TabsTrigger value="other" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} fill="none" />
+            <span>其他</span>
+          </TabsTrigger>
+          <TabsTrigger value="about" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} fill="none" />
+            <span>关于</span>
           </TabsTrigger>
         </TabsList>
 
-        <ScrollArea className="h-[calc(100vh-280px)] mt-6">
+        <ScrollArea className="h-[calc(100vh-240px)] sm:h-[calc(100vh-280px)] mt-4 sm:mt-6">
           <TabsContent value="appearance" className="mt-0">
             <AppearanceTab />
           </TabsContent>
 
           <TabsContent value="security" className="mt-0">
             <SecurityTab />
+          </TabsContent>
+
+          <TabsContent value="other" className="mt-0">
+            <OtherTab />
           </TabsContent>
 
           <TabsContent value="about" className="mt-0">
@@ -221,11 +229,11 @@ function AppearanceTab() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* 主题模式 */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">主题模式</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">主题模式</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <ThemeOption
             value="light"
             current={theme}
@@ -252,13 +260,13 @@ function AppearanceTab() {
 
       {/* 主题色 */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">主题色</h3>
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">主题色</h3>
         
         {/* 单色预设 */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div>
-            <h4 className="text-sm font-medium mb-3">单色</h4>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">单色</h4>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
               <ColorPresetOption
                 value="blue"
                 current={accentColor}
@@ -306,8 +314,8 @@ function AppearanceTab() {
 
           {/* 渐变色预设 */}
           <div>
-            <h4 className="text-sm font-medium mb-3">渐变色</h4>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">渐变色</h4>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
               <ColorPresetOption
                 value="gradient-sunset"
                 current={accentColor}
@@ -355,14 +363,14 @@ function AppearanceTab() {
 
           {/* 自定义颜色选择器 */}
           <div>
-            <h4 className="text-sm font-medium mb-3">自定义颜色</h4>
-            <div className="flex gap-4 items-center">
+            <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">自定义颜色</h4>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <input
                   type="color"
                   value={accentColor.startsWith('#') ? accentColor : '#3b82f6'}
                   onChange={(e) => handleAccentColorChange(e.target.value)}
-                  className="h-12 w-full rounded-lg border-2 border-border cursor-pointer"
+                  className="h-10 sm:h-12 w-full rounded-lg border-2 border-border cursor-pointer"
                   title="选择自定义颜色"
                 />
               </div>
@@ -372,11 +380,11 @@ function AppearanceTab() {
                   value={accentColor}
                   onChange={(e) => handleAccentColorChange(e.target.value)}
                   placeholder="#3b82f6"
-                  className="font-mono"
+                  className="font-mono text-sm"
                 />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-2">
               点击色块选择颜色，或手动输入 HEX 颜色代码
             </p>
           </div>
@@ -385,10 +393,10 @@ function AppearanceTab() {
 
       {/* 动效设置 */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">动画效果</h3>
-        <div className="space-y-3">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">动画效果</h3>
+        <div className="space-y-2 sm:space-y-3">
           {/* 全局动画开关 */}
-          <div className="rounded-lg border bg-card p-4">
+          <div className="rounded-lg border bg-card p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5 flex-1">
                 <Label htmlFor="animations" className="text-base font-medium cursor-pointer">
@@ -649,7 +657,7 @@ function SecurityTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Token 生成成功弹窗 */}
       <Dialog open={showTokenDialog} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
@@ -717,12 +725,12 @@ function SecurityTab() {
       </Dialog>
 
       {/* 当前 Token */}
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4">当前 Access Token</h3>
-        <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">当前 Access Token</h3>
+        <div className="space-y-3 sm:space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="current-token">您的访问令牌</Label>
-            <div className="flex gap-2">
+            <Label htmlFor="current-token" className="text-sm">您的访问令牌</Label>
+            <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <Input
                   id="current-token"
@@ -749,28 +757,31 @@ function SecurityTab() {
                   )}
                 </button>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyToClipboard(getCurrentToken())}
-                title="复制到剪贴板"
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-500" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    disabled={isRegenerating}
-                    className="gap-2"
-                  >
-                    <RefreshCw className={cn('h-4 w-4', isRegenerating && 'animate-spin')} />
-                    重新生成
-                  </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(getCurrentToken())}
+                  title="复制到剪贴板"
+                  className="flex-shrink-0"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isRegenerating}
+                      className="gap-2 flex-1 sm:flex-none"
+                    >
+                      <RefreshCw className={cn('h-4 w-4', isRegenerating && 'animate-spin')} />
+                      <span className="hidden sm:inline">重新生成</span>
+                      <span className="sm:hidden">生成</span>
+                    </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -788,8 +799,9 @@ function SecurityTab() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               请妥善保管您的 Access Token，不要泄露给他人
             </p>
           </div>
@@ -797,11 +809,11 @@ function SecurityTab() {
       </div>
 
       {/* 更新 Token */}
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4">自定义 Access Token</h3>
-        <div className="space-y-4">
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">自定义 Access Token</h3>
+        <div className="space-y-3 sm:space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="new-token">新的访问令牌</Label>
+            <Label htmlFor="new-token" className="text-sm">新的访问令牌</Label>
             <div className="relative">
               <Input
                 id="new-token"
@@ -866,9 +878,9 @@ function SecurityTab() {
       </div>
 
       {/* 安全提示 */}
-      <div className="rounded-lg border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/30 p-4">
-        <h4 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-2">安全提示</h4>
-        <ul className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1 list-disc list-inside">
+      <div className="rounded-lg border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/30 p-3 sm:p-4">
+        <h4 className="text-sm sm:text-base font-semibold text-yellow-900 dark:text-yellow-200 mb-2">安全提示</h4>
+        <ul className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-300 space-y-1 list-disc list-inside">
           <li>重新生成 Token 会创建系统随机生成的 64 位安全令牌</li>
           <li>自定义 Token 必须满足所有安全要求才能使用</li>
           <li>更新 Token 后，旧的 Token 将立即失效</li>
@@ -881,13 +893,103 @@ function SecurityTab() {
   )
 }
 
+// 其他设置标签页
+function OtherTab() {
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  const [isResetting, setIsResetting] = useState(false)
+
+  const handleResetSetup = async () => {
+    setIsResetting(true)
+
+    try {
+      const token = localStorage.getItem('access-token')
+
+      // 调用后端API重置首次配置状态
+      const response = await fetch('/api/webui/setup/reset', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast({
+          title: '重置成功',
+          description: '即将进入初次配置向导',
+        })
+
+        // 延迟跳转到配置向导
+        setTimeout(() => {
+          navigate({ to: '/setup' })
+        }, 1000)
+      } else {
+        toast({
+          title: '重置失败',
+          description: data.message || '无法重置配置状态',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      console.error('重置配置状态错误:', error)
+      toast({
+        title: '重置失败',
+        description: '连接服务器失败',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* 配置向导 */}
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">配置向导</h3>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-2">
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              重新进行初次配置向导，可以帮助您重新设置系统的基础配置。
+            </p>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" disabled={isResetting} className="gap-2">
+                <RotateCcw className={cn('h-4 w-4', isResetting && 'animate-spin')} />
+                重新进行初次配置
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认重新配置</AlertDialogTitle>
+                <AlertDialogDescription>
+                  这将带您重新进入初次配置向导。您可以重新设置系统的基础配置项。确定要继续吗？
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetSetup}>
+                  确认重置
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 关于标签页
 function AboutTab() {
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4">关于 {APP_NAME}</h3>
-        <div className="space-y-2 text-sm text-muted-foreground">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">关于 {APP_NAME}</h3>
+        <div className="space-y-2 text-xs sm:text-sm text-muted-foreground">
           <p>版本: {APP_VERSION}</p>
           <p>基于 React 19 + Vite + TanStack Router</p>
         </div>
@@ -911,23 +1013,23 @@ function ThemeOption({ value, current, onChange, label, description }: ThemeOpti
     <button
       onClick={() => onChange(value)}
       className={cn(
-        'relative rounded-lg border-2 p-4 text-left transition-all',
+        'relative rounded-lg border-2 p-3 sm:p-4 text-left transition-all',
         'hover:border-primary/50 hover:bg-accent/50',
         isSelected ? 'border-primary bg-accent' : 'border-border'
       )}
     >
       {/* 选中指示器 */}
       {isSelected && (
-        <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-primary" />
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 h-2 w-2 rounded-full bg-primary" />
       )}
 
       <div className="space-y-1">
-        <div className="font-medium">{label}</div>
-        <div className="text-xs text-muted-foreground">{description}</div>
+        <div className="text-sm sm:text-base font-medium">{label}</div>
+        <div className="text-[10px] sm:text-xs text-muted-foreground">{description}</div>
       </div>
 
       {/* 主题预览 */}
-      <div className="mt-3 flex gap-1">
+      <div className="mt-2 sm:mt-3 flex gap-1">
         {value === 'light' && (
           <>
             <div className="h-2 w-2 rounded-full bg-slate-200" />
@@ -969,19 +1071,19 @@ function ColorPresetOption({ value, current, onChange, label, colorClass }: Colo
     <button
       onClick={() => onChange(value)}
       className={cn(
-        'relative rounded-lg border-2 p-3 text-left transition-all',
+        'relative rounded-lg border-2 p-2 sm:p-3 text-left transition-all',
         'hover:border-primary/50 hover:bg-accent/50',
         isSelected ? 'border-primary bg-accent' : 'border-border'
       )}
     >
       {/* 选中指示器 */}
       {isSelected && (
-        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />
+        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary" />
       )}
 
-      <div className="flex flex-col items-center gap-2">
-        <div className={cn('h-10 w-10 rounded-full', colorClass)} />
-        <div className="text-xs font-medium">{label}</div>
+      <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+        <div className={cn('h-8 w-8 sm:h-10 sm:w-10 rounded-full', colorClass)} />
+        <div className="text-[10px] sm:text-xs font-medium text-center">{label}</div>
       </div>
     </button>
   )

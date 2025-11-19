@@ -1,3 +1,4 @@
+import { fetchWithAuth, getAuthHeaders } from '@/lib/fetch-with-auth'
 import type { PluginInfo } from '@/types/plugin'
 
 /**
@@ -105,15 +106,10 @@ interface PluginApiResponse {
  */
 export async function fetchPluginList(): Promise<PluginInfo[]> {
   try {
-    const token = localStorage.getItem('access-token')
-    
     // 通过后端 API 获取 Raw 文件
-    const response = await fetch('/api/webui/plugins/fetch-raw', {
+    const response = await fetchWithAuth('/api/webui/plugins/fetch-raw', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         owner: PLUGIN_REPO_OWNER,
         repo: PLUGIN_REPO_NAME,
@@ -187,7 +183,7 @@ export async function fetchPluginList(): Promise<PluginInfo[]> {
  */
 export async function checkGitStatus(): Promise<GitStatus> {
   try {
-    const response = await fetch('/api/webui/plugins/git-status')
+    const response = await fetchWithAuth('/api/webui/plugins/git-status')
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -209,7 +205,7 @@ export async function checkGitStatus(): Promise<GitStatus> {
  */
 export async function getMaimaiVersion(): Promise<MaimaiVersion> {
   try {
-    const response = await fetch('/api/webui/plugins/version')
+    const response = await fetchWithAuth('/api/webui/plugins/version')
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -325,12 +321,8 @@ export function connectPluginProgressWebSocket(
  */
 export async function getInstalledPlugins(): Promise<InstalledPlugin[]> {
   try {
-    const token = localStorage.getItem('access-token')
-    
-    const response = await fetch('/api/webui/plugins/installed', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await fetchWithAuth('/api/webui/plugins/installed', {
+      headers: getAuthHeaders()
     })
     
     if (!response.ok) {
@@ -373,14 +365,9 @@ export function getInstalledPluginVersion(pluginId: string, installedPlugins: In
  * 安装插件
  */
 export async function installPlugin(pluginId: string, repositoryUrl: string, branch: string = 'main'): Promise<any> {
-  const token = localStorage.getItem('access-token')
-  
-  const response = await fetch('/api/webui/plugins/install', {
+  const response = await fetchWithAuth('/api/webui/plugins/install', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       plugin_id: pluginId,
       repository_url: repositoryUrl,
@@ -400,14 +387,9 @@ export async function installPlugin(pluginId: string, repositoryUrl: string, bra
  * 卸载插件
  */
 export async function uninstallPlugin(pluginId: string): Promise<{ success: boolean; message: string }> {
-  const token = localStorage.getItem('access-token')
-  
-  const response = await fetch('/api/webui/plugins/uninstall', {
+  const response = await fetchWithAuth('/api/webui/plugins/uninstall', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       plugin_id: pluginId
     })
@@ -425,14 +407,9 @@ export async function uninstallPlugin(pluginId: string): Promise<{ success: bool
  * 更新插件
  */
 export async function updatePlugin(pluginId: string, repositoryUrl: string, branch: string = 'main'): Promise<{ success: boolean; message: string; old_version: string; new_version: string }> {
-  const token = localStorage.getItem('access-token')
-  
-  const response = await fetch('/api/webui/plugins/update', {
+  const response = await fetchWithAuth('/api/webui/plugins/update', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       plugin_id: pluginId,
       repository_url: repositoryUrl,

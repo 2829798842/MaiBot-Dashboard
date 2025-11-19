@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { IndexPage } from './routes/index'
 import { SettingsPage } from './routes/settings'
 import { AuthPage } from './routes/auth'
+import { SetupPage } from './routes/setup'
 import { NotFoundPage } from './routes/404'
 import { BotConfigPage } from './routes/config/bot'
 import { ModelProviderConfigPage } from './routes/config/modelProvider'
@@ -38,6 +39,13 @@ const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth',
   component: AuthPage,
+})
+
+// 首次配置路由（无 Layout）
+const setupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/setup',
+  component: SetupPage,
 })
 
 // 受保护的路由 Root（带 Layout）
@@ -145,6 +153,7 @@ const notFoundRoute = createRoute({
 // 路由树
 const routeTree = rootRoute.addChildren([
   authRoute,
+  setupRoute,
   protectedRoute.addChildren([
     indexRoute,
     botConfigRoute,

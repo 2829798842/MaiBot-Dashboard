@@ -1,6 +1,7 @@
 /**
  * 人物信息管理 API
  */
+import { fetchWithAuth, getAuthHeaders } from '@/lib/fetch-with-auth'
 import type {
   PersonListResponse,
   PersonDetailResponse,
@@ -11,17 +12,6 @@ import type {
 } from '@/types/person'
 
 const API_BASE = '/api/webui/person'
-
-/**
- * 获取认证 header
- */
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('access-token')
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  }
-}
 
 /**
  * 获取人物信息列表
@@ -41,7 +31,7 @@ export async function getPersonList(params: {
   if (params.is_known !== undefined) queryParams.append('is_known', params.is_known.toString())
   if (params.platform) queryParams.append('platform', params.platform)
   
-  const response = await fetch(`${API_BASE}/list?${queryParams}`, {
+  const response = await fetchWithAuth(`${API_BASE}/list?${queryParams}`, {
     headers: getAuthHeaders(),
   })
   
@@ -57,7 +47,7 @@ export async function getPersonList(params: {
  * 获取人物详细信息
  */
 export async function getPersonDetail(personId: string): Promise<PersonDetailResponse> {
-  const response = await fetch(`${API_BASE}/${personId}`, {
+  const response = await fetchWithAuth(`${API_BASE}/${personId}`, {
     headers: getAuthHeaders(),
   })
   
@@ -76,7 +66,7 @@ export async function updatePerson(
   personId: string,
   data: PersonUpdateRequest
 ): Promise<PersonUpdateResponse> {
-  const response = await fetch(`${API_BASE}/${personId}`, {
+  const response = await fetchWithAuth(`${API_BASE}/${personId}`, {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -94,7 +84,7 @@ export async function updatePerson(
  * 删除人物信息
  */
 export async function deletePerson(personId: string): Promise<PersonDeleteResponse> {
-  const response = await fetch(`${API_BASE}/${personId}`, {
+  const response = await fetchWithAuth(`${API_BASE}/${personId}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   })
@@ -111,7 +101,7 @@ export async function deletePerson(personId: string): Promise<PersonDeleteRespon
  * 获取人物统计数据
  */
 export async function getPersonStats(): Promise<PersonStatsResponse> {
-  const response = await fetch(`${API_BASE}/stats/summary`, {
+  const response = await fetchWithAuth(`${API_BASE}/stats/summary`, {
     headers: getAuthHeaders(),
   })
   

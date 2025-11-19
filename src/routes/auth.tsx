@@ -89,8 +89,23 @@ export function AuthPage() {
         // Token 验证成功，保存到 localStorage
         localStorage.setItem('access-token', token.trim())
         
-        // 跳转到首页
-        navigate({ to: '/' })
+        // 检查是否需要首次配置
+        const setupResponse = await fetch('/api/webui/setup/status', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token.trim()}`,
+          },
+        })
+
+        const setupData = await setupResponse.json()
+
+        if (setupResponse.ok && setupData.is_first_setup) {
+          // 需要首次配置，跳转到配置向导
+          navigate({ to: '/setup' })
+        } else {
+          // 不需要配置或配置已完成，跳转到首页
+          navigate({ to: '/' })
+        }
       } else {
         setError(data.message || 'Token 验证失败，请检查后重试')
       }

@@ -1,6 +1,7 @@
 /**
  * 表达方式管理 API
  */
+import { fetchWithAuth, getAuthHeaders } from '@/lib/fetch-with-auth'
 import type {
   ExpressionListResponse,
   ExpressionDetailResponse,
@@ -13,17 +14,6 @@ import type {
 } from '@/types/expression'
 
 const API_BASE = '/api/webui/expression'
-
-/**
- * 获取认证 header
- */
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('access-token')
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  }
-}
 
 /**
  * 获取表达方式列表
@@ -41,7 +31,7 @@ export async function getExpressionList(params: {
   if (params.search) queryParams.append('search', params.search)
   if (params.chat_id) queryParams.append('chat_id', params.chat_id)
   
-  const response = await fetch(`${API_BASE}/list?${queryParams}`, {
+  const response = await fetchWithAuth(`${API_BASE}/list?${queryParams}`, {
     headers: getAuthHeaders(),
   })
   
@@ -57,7 +47,7 @@ export async function getExpressionList(params: {
  * 获取表达方式详细信息
  */
 export async function getExpressionDetail(expressionId: number): Promise<ExpressionDetailResponse> {
-  const response = await fetch(`${API_BASE}/${expressionId}`, {
+  const response = await fetchWithAuth(`${API_BASE}/${expressionId}`, {
     headers: getAuthHeaders(),
   })
   
@@ -75,7 +65,7 @@ export async function getExpressionDetail(expressionId: number): Promise<Express
 export async function createExpression(
   data: ExpressionCreateRequest
 ): Promise<ExpressionCreateResponse> {
-  const response = await fetch(`${API_BASE}/`, {
+  const response = await fetchWithAuth(`${API_BASE}/`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -96,7 +86,7 @@ export async function updateExpression(
   expressionId: number,
   data: ExpressionUpdateRequest
 ): Promise<ExpressionUpdateResponse> {
-  const response = await fetch(`${API_BASE}/${expressionId}`, {
+  const response = await fetchWithAuth(`${API_BASE}/${expressionId}`, {
     method: 'PATCH',
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -114,7 +104,7 @@ export async function updateExpression(
  * 删除表达方式
  */
 export async function deleteExpression(expressionId: number): Promise<ExpressionDeleteResponse> {
-  const response = await fetch(`${API_BASE}/${expressionId}`, {
+  const response = await fetchWithAuth(`${API_BASE}/${expressionId}`, {
     method: 'DELETE',
     headers: getAuthHeaders(),
   })
@@ -131,7 +121,7 @@ export async function deleteExpression(expressionId: number): Promise<Expression
  * 获取表达方式统计数据
  */
 export async function getExpressionStats(): Promise<ExpressionStatsResponse> {
-  const response = await fetch(`${API_BASE}/stats/summary`, {
+  const response = await fetchWithAuth(`${API_BASE}/stats/summary`, {
     headers: getAuthHeaders(),
   })
   
