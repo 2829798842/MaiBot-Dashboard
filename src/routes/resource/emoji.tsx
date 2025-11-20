@@ -942,11 +942,12 @@ function EmojiDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>表情包详情</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+          <div className="space-y-4">
           {/* 表情包预览图 */}
           <div className="flex justify-center">
             <div className="w-32 h-32 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
@@ -1057,6 +1058,7 @@ function EmojiDetailDialog({
             <div className="mt-1 text-sm">{formatTime(emoji.last_used_time)}</div>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )

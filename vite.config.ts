@@ -20,4 +20,23 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React 核心库
+          'react-vendor': ['react', 'react-dom', 'react/jsx-runtime'],
+          // TanStack Router
+          'router': ['@tanstack/react-router'],
+          // UI 组件库
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-checkbox', '@radix-ui/react-label'],
+          // 图标库
+          'icons': ['lucide-react'],
+          // 图表库
+          'charts': ['recharts'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 })
