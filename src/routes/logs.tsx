@@ -418,7 +418,7 @@ export function LogViewerPage() {
                         {log.module}
                       </div>
                       {/* 第三行：消息内容 */}
-                      <div className="text-gray-300 dark:text-gray-400 text-xs break-all">
+                      <div className="text-gray-300 dark:text-gray-400 text-xs whitespace-pre-wrap break-words">
                         {log.message}
                       </div>
                     </div>
@@ -446,7 +446,7 @@ export function LogViewerPage() {
                       </span>
 
                       {/* 消息内容 */}
-                      <span className="text-gray-300 dark:text-gray-400 flex-1 break-all text-xs lg:text-sm">
+                      <span className="text-gray-300 dark:text-gray-400 flex-1 whitespace-pre-wrap break-words text-xs lg:text-sm">
                         {log.message}
                       </span>
                     </div>
