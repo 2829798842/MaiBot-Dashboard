@@ -1,5 +1,6 @@
 import { fetchWithAuth, getAuthHeaders } from '@/lib/fetch-with-auth'
 import type { PluginInfo } from '@/types/plugin'
+import type { PluginConfigItem, PluginConfigResponse } from '@/types/plugin-config'
 
 /**
  * Git 安装状态
@@ -47,6 +48,8 @@ export interface InstalledPlugin {
     [key: string]: unknown  // 允许其他字段
   }
   path: string
+  enabled?: boolean
+  running?: boolean
 }
 
 /**
@@ -423,4 +426,46 @@ export async function updatePlugin(pluginId: string, repositoryUrl: string, bran
   }
   
   return await response.json()
+}
+
+/**
+ * 获取插件配置表单定义
+ */
+export async function getPluginConfig(pluginId: string): Promise<PluginConfigItem[]> {
+  const response = await fetchWithAuth(`/api/webui/plugins/${pluginId}/config`, {
+    headers: getAuthHeaders()
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '获取配置失败')
+  }
+
+  const result: PluginConfigResponse = await response.json()
+  if (!result.success) {
+    throw new Error(result.error || '获取配置失败')
+  }
+
+  return result.data
+}
+
+/**
+ * 更新插件配置
+ */
+export async function updatePluginConfig(pluginId: string, configs: Record<string, any>): Promise<void> {
+  const response = await fetchWithAuth(`/api/webui/plugins/${pluginId}/config`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ configs })
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || '更新配置失败')
+  }
+
+  const result = await response.json()
+  if (!result.success) {
+    throw new Error(result.error || '更新配置失败')
+  }
 }
