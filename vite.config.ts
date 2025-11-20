@@ -9,7 +9,7 @@ export default defineConfig({
     port: 7999,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:8001',  // WebUI 后端服务器
         changeOrigin: true,
         ws: true,
       },

@@ -92,7 +92,9 @@ export function PersonManagementPage() {
   const loadStats = async () => {
     try {
       const response = await getPersonStats()
-      setStats(response.data)
+      if (response?.data) {
+        setStats(response.data)
+      }
     } catch (error) {
       console.error('加载统计数据失败:', error)
     }

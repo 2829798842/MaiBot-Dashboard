@@ -36,8 +36,8 @@ class LogWebSocketManager {
    */
   private getWebSocketUrl(): string {
     if (import.meta.env.DEV) {
-      // 开发模式：直接连接到后端端口
-      return 'ws://127.0.0.1:8000/ws/logs'
+      // 开发模式：连接到 WebUI 后端服务器
+      return 'ws://127.0.0.1:8001/ws/logs'
     } else {
       // 生产模式：使用当前页面的 host
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
