@@ -133,12 +133,19 @@ export function AdapterConfigPage() {
         } else if (cleanValue.startsWith('[') && cleanValue.endsWith(']')) {
           // 解析数组
           const arrayContent = cleanValue.slice(1, -1).trim()
-          parsedValue = arrayContent
-            ? arrayContent.split(',').map((v) => {
-                const trimmedV = v.trim()
-                return isNaN(Number(trimmedV)) ? trimmedV.replace(/"/g, '') : Number(trimmedV)
-              })
-            : []
+          if (arrayContent) {
+            const arrayValues = arrayContent.split(',').map((v) => {
+              const trimmedV = v.trim()
+              return isNaN(Number(trimmedV)) ? trimmedV.replace(/"/g, '') : Number(trimmedV)
+            })
+            // 确保数组类型一致（全部是数字或全部是字符串）
+            const firstType = typeof arrayValues[0]
+            parsedValue = arrayValues.every((v) => typeof v === firstType)
+              ? (arrayValues as number[])
+              : (arrayValues.filter((v) => typeof v === 'number') as number[])
+          } else {
+            parsedValue = []
+          }
         } else if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
           parsedValue = cleanValue.slice(1, -1)
         } else if (!isNaN(Number(cleanValue))) {
@@ -259,7 +266,7 @@ export function AdapterConfigPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = fileName || 'adapter_config.toml'
+    a.download = fileName || 'config.toml'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -274,7 +281,7 @@ export function AdapterConfigPage() {
   // 使用默认配置
   const handleUseDefault = () => {
     setConfig(JSON.parse(JSON.stringify(DEFAULT_CONFIG)))
-    setFileName('adapter_config.toml')
+    setFileName('config.toml')
     toast({
       title: '已加载默认配置',
       description: '可以开始编辑配置',
