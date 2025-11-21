@@ -64,7 +64,7 @@ export function PluginsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('all')  // all | installed | updates
-  const [showCompatibleOnly, setShowCompatibleOnly] = useState(false)  // 只显示兼容的
+  const [showCompatibleOnly, setShowCompatibleOnly] = useState(true)  // 默认只显示兼容的
   const [plugins, setPlugins] = useState<PluginInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -655,13 +655,55 @@ export function PluginsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">
-              全部插件 ({plugins.length})
+              全部插件 ({
+                plugins.filter(p => {
+                  if (!p.manifest) return false
+                  const matchesSearch = searchQuery === '' ||
+                    p.manifest.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.manifest.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (p.manifest.keywords && p.manifest.keywords.some(k => k.toLowerCase().includes(searchQuery.toLowerCase())))
+                  const matchesCategory = categoryFilter === 'all' ||
+                    (p.manifest.categories && p.manifest.categories.includes(categoryFilter))
+                  const matchesCompatibility = !showCompatibleOnly || 
+                    !maimaiVersion || 
+                    checkPluginCompatibility(p)
+                  return matchesSearch && matchesCategory && matchesCompatibility
+                }).length
+              })
             </TabsTrigger>
             <TabsTrigger value="installed">
-              已安装 ({plugins.filter(p => p.installed).length})
+              已安装 ({
+                plugins.filter(p => {
+                  if (!p.manifest) return false
+                  const matchesSearch = searchQuery === '' ||
+                    p.manifest.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.manifest.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (p.manifest.keywords && p.manifest.keywords.some(k => k.toLowerCase().includes(searchQuery.toLowerCase())))
+                  const matchesCategory = categoryFilter === 'all' ||
+                    (p.manifest.categories && p.manifest.categories.includes(categoryFilter))
+                  const matchesCompatibility = !showCompatibleOnly || 
+                    !maimaiVersion || 
+                    checkPluginCompatibility(p)
+                  return p.installed && matchesSearch && matchesCategory && matchesCompatibility
+                }).length
+              })
             </TabsTrigger>
             <TabsTrigger value="updates">
-              可更新 ({plugins.filter(p => p.installed && needsUpdate(p)).length})
+              可更新 ({
+                plugins.filter(p => {
+                  if (!p.manifest) return false
+                  const matchesSearch = searchQuery === '' ||
+                    p.manifest.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.manifest.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (p.manifest.keywords && p.manifest.keywords.some(k => k.toLowerCase().includes(searchQuery.toLowerCase())))
+                  const matchesCategory = categoryFilter === 'all' ||
+                    (p.manifest.categories && p.manifest.categories.includes(categoryFilter))
+                  const matchesCompatibility = !showCompatibleOnly || 
+                    !maimaiVersion || 
+                    checkPluginCompatibility(p)
+                  return p.installed && needsUpdate(p) && matchesSearch && matchesCategory && matchesCompatibility
+                }).length
+              })
             </TabsTrigger>
           </TabsList>
         </Tabs>

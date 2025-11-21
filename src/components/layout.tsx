@@ -6,6 +6,7 @@ import { useAuthGuard } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { SearchDialog } from '@/components/search-dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -163,12 +164,13 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4">
-          <ul className={cn(
-            // 移动端始终使用正常间距，桌面端根据 sidebarOpen 切换
-            "space-y-6",
-            !sidebarOpen && "lg:space-y-3"
-          )}>
+        <ScrollArea className="flex-1">
+          <nav className="p-4">
+            <ul className={cn(
+              // 移动端始终使用正常间距,桌面端根据 sidebarOpen 切换
+              "space-y-6",
+              !sidebarOpen && "lg:space-y-3"
+            )}>
             {menuSections.map((section, sectionIndex) => (
               <li key={section.title}>
                 {/* 块标题 - 移动端始终可见，桌面端根据 sidebarOpen 切换 */}
@@ -257,7 +259,8 @@ export function Layout({ children }: LayoutProps) {
               </li>
             ))}
           </ul>
-        </nav>
+          </nav>
+        </ScrollArea>
       </aside>
 
       {/* Mobile overlay */}
